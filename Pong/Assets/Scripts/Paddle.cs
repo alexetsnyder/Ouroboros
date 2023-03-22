@@ -58,8 +58,9 @@ public class Paddle : MonoBehaviour
     private void MoveTowardsBall()
     {
         float ballY = ball.transform.position.y;
+        float yDir = (ballY - transform.position.y < 0) ? -1 : 1;
 
-        Vector2 direction = new(0.0f, ballY - transform.position.y);
+        Vector2 direction = new(0.0f, yDir);
         Move(direction);
     }
 }

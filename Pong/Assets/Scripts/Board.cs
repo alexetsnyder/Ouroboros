@@ -1,8 +1,11 @@
 using UnityEngine;
+using TMPro;
 
 public class Board : MonoBehaviour
 {
     public GameObject dot;
+    public TMP_Text playerScore;
+    public TMP_Text opponentScore;
 
     public Rect Bounds
     {
@@ -32,6 +35,24 @@ public class Board : MonoBehaviour
         {
             Instantiate(dot, position, Quaternion.identity);
             position.y += seperation + dotSize;
+        }
+    }
+
+    public void ClearScore()
+    {
+        playerScore.text = "0";
+        opponentScore.text = "0";
+    }
+
+    public void UpdateScore(Side side)
+    {
+        if (side == Side.PLAYER)
+        {
+            playerScore.text = (int.Parse(playerScore.text) + 1).ToString();
+        }
+        else if (side == Side.OPPONENT)
+        {
+            opponentScore.text = (int.Parse(opponentScore.text) + 1).ToString();
         }
     }
 }
