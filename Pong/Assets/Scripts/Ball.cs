@@ -3,19 +3,41 @@ using UnityEngine;
 public class Ball : MonoBehaviour
 {
     public Vector2 speed;
-    private BoxCollider2D Collider { get; set; }
+    public Vector2 ballStart;
+    public bool debug;
     private Rigidbody2D Rigidbody { get; set; }
+    public bool IsServed { get; set; }
 
     private void Awake()
     {
-        Collider = GetComponent<BoxCollider2D>();
-        Rigidbody = GetComponent<Rigidbody2D>();    
+        Rigidbody = GetComponent<Rigidbody2D>();
+        IsServed = false;
     }
 
-    private void Start()
+    private void Update()
     {
-        Vector2 newVelocity = new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f));
-        Rigidbody.AddForce(newVelocity * speed, ForceMode2D.Impulse);
-        //Rigidbody.velocity = newVelocity * speed;
+        if (!IsServed)
+        {
+            Restart();
+            IsServed = true;
+        }
+
+        if (debug && Input.GetKeyDown(KeyCode.Space))
+        {
+            Restart();
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Restart();
+    }
+
+    private void Restart()
+    {
+        transform.position = ballStart;
+        Rigidbody.velocity = new Vector2(0.0f, 0.0f);
+        Vector2 direction = new(-1.0f, Random.Range(-1.0f, 1.0f));
+        Rigidbody.AddForce(direction * speed, ForceMode2D.Impulse);
     }
 }

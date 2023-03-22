@@ -4,15 +4,14 @@ public class Paddle : MonoBehaviour
 {
     public Vector2 velocity;
     public Board board;
+    public Ball ball;
     private Vector2 Position { get; set; }
     private string Name { get; set; }
-    private Rigidbody2D Rigidbody { get; set; }
 
     private void Awake()
     {
         Position = transform.position;
         Name = gameObject.name;
-        Rigidbody = GetComponent<Rigidbody2D>();
     }
 
     private void Update()
@@ -24,22 +23,43 @@ public class Paddle : MonoBehaviour
 
     private void ProcessKeyInput()
     {
-        if (Input.GetKey(KeyCode.W))
+        if (Name == "Player")
         {
-            Move(Vector2.up);
-        }
-        
-        if (Input.GetKey(KeyCode.S))
+            if (Input.GetKey(KeyCode.W))
+            {
+                Move(Vector2.up);
+            }
+
+            if (Input.GetKey(KeyCode.S))
+            {
+                Move(Vector2.down);
+            }
+        }   
+        else
         {
-            Move(Vector2.down);
+            MoveTowardsBall();
         }
     }
 
     private void Move(Vector2 direction)
     {
-        Position += velocity * Time.deltaTime * direction;
-        //Rigidbody.AddForce(velocity * direction, ForceMode2D.Impulse);
+        Rect boardBounds = board.Bounds;
+        float ySize = transform.localScale.y;
+        Vector2 previousPos = Position;
+
+        Position += velocity * Time.deltaTime * direction;     
+        if (Position.y - ySize / 2 < boardBounds.y ||
+            Position.y + ySize / 2 > boardBounds.y + boardBounds.size.y)
+        {
+            Position = previousPos;
+        }
     }
 
-    
+    private void MoveTowardsBall()
+    {
+        float ballY = ball.transform.position.y;
+
+        Vector2 direction = new(0.0f, ballY - transform.position.y);
+        Move(direction);
+    }
 }
