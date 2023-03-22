@@ -2,20 +2,24 @@ using UnityEngine;
 
 public class Paddle : MonoBehaviour
 {
-    public GameObject paddle;
-    public Vector2 Velocity;
-    private Vector2 Position;
+    public Vector2 velocity;
+    public Board board;
+    private Vector2 Position { get; set; }
+    private string Name { get; set; }
+    private Rigidbody2D Rigidbody { get; set; }
 
     private void Awake()
     {
-        Position = paddle.transform.position;
+        Position = transform.position;
+        Name = gameObject.name;
+        Rigidbody = GetComponent<Rigidbody2D>();
     }
 
     private void Update()
     {
         ProcessKeyInput();
 
-        paddle.transform.position = Position;
+        transform.position = Position;
     }
 
     private void ProcessKeyInput()
@@ -33,6 +37,9 @@ public class Paddle : MonoBehaviour
 
     private void Move(Vector2 direction)
     {
-        Position += Velocity * Time.deltaTime * direction;
+        Position += velocity * Time.deltaTime * direction;
+        //Rigidbody.AddForce(velocity * direction, ForceMode2D.Impulse);
     }
+
+    
 }
