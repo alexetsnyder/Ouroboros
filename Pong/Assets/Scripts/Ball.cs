@@ -52,6 +52,13 @@ public class Ball : MonoBehaviour
         }     
     }
 
+    public void SetUp()
+    {
+        IsServed = false;
+        position = ballStart;
+        transform.position = ballStart;
+    }
+
     private void Restart(float xDir)
     {
         position = ballStart;
@@ -73,6 +80,7 @@ public class Ball : MonoBehaviour
         if (ParseCollision(position))
         {
             position = previousPos;
+            position += speed * direction * Time.deltaTime;
         }
     }
 

@@ -4,8 +4,10 @@ using TMPro;
 public class Board : MonoBehaviour
 {
     public GameObject dot;
+    public Ball ball;
     public TMP_Text playerScore;
     public TMP_Text opponentScore;
+    public TMP_Text gameText;
 
     public Rect Bounds
     {
@@ -20,6 +22,14 @@ public class Board : MonoBehaviour
     private void Start()
     {
         CreateDottedLine();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Restart();
+        }
     }
 
     private void CreateDottedLine()
@@ -38,6 +48,24 @@ public class Board : MonoBehaviour
         }
     }
 
+    public void Restart()
+    {
+        ClearScore();
+        gameText.text = "";
+    }
+
+    public void GameOver(Side winner)
+    {
+        if (winner == Side.PLAYER)
+        {
+            gameText.text = "You Win!";
+        }
+        else
+        {
+            gameText.text = "You Lose!";
+        }
+    }
+
     public void ClearScore()
     {
         playerScore.text = "0";
@@ -48,11 +76,23 @@ public class Board : MonoBehaviour
     {
         if (side == Side.PLAYER)
         {
-            playerScore.text = (int.Parse(playerScore.text) + 1).ToString();
+            int score = (int.Parse(playerScore.text) + 1);
+            playerScore.text = score.ToString();
+            if (score == 5)
+            {
+                GameOver(Side.PLAYER);
+                ball.SetUp();
+            }
         }
         else if (side == Side.OPPONENT)
         {
-            opponentScore.text = (int.Parse(opponentScore.text) + 1).ToString();
+            int score = (int.Parse(opponentScore.text) + 1);
+            opponentScore.text = score.ToString();
+            if (score == 5)
+            {
+                GameOver(Side.OPPONENT);
+                ball.SetUp();
+            }
         }
     }
 }

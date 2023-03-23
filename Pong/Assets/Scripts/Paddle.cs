@@ -5,6 +5,7 @@ public class Paddle : MonoBehaviour
     public Vector2 velocity;
     public Board board;
     public Ball ball;
+    public bool isAIOn;
     private Vector2 Position { get; set; }
     private string Name { get; set; }
 
@@ -35,7 +36,7 @@ public class Paddle : MonoBehaviour
                 Move(Vector2.down);
             }
         }   
-        else
+        else if (isAIOn && Name == "Opponent")
         {
             MoveTowardsBall();
         }
