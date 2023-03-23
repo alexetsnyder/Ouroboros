@@ -5,22 +5,21 @@ public class Ball : MonoBehaviour
     public Board board;
     public Paddle player;
     public Paddle opponent;
-    public Vector2 speed;
-    public Vector2 forceMod;
+    public float speed;
+    public float forceMod;
     public Vector2 ballStart;
     public bool usePhysics;
 
     private Vector2 position;
-    private Vector2 direction;
-    private Rigidbody2D Rigidbody { get; set; }
+    public Vector2 direction;
+    public Rigidbody2D Rigidbody { get; set; }
     private bool IsServed { get; set; }
 
     private void Awake()
     {
         Rigidbody = GetComponent<Rigidbody2D>();
-        IsServed = false;
-        position = ballStart;
-        direction = new(-1.0f, Random.Range(-0.25f, 0.25f));
+        SetUp();
+        direction = new(0.0f, 0.0f);
     }
 
     private void Update()
@@ -28,7 +27,6 @@ public class Ball : MonoBehaviour
         if (!IsServed && Input.GetKeyDown(KeyCode.Space))
         {
             Restart(-1.0f);
-            IsServed = true;
         }
 
         if (IsServed && !usePhysics)
@@ -43,12 +41,18 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.name == "BoundsLeft")
         {
             board.UpdateScore(Side.OPPONENT);
-            Restart(1.0f);
+            if (IsServed)
+            {
+                Restart(1.0f);
+            }   
         }
         else
         {
             board.UpdateScore(Side.PLAYER);
-            Restart(-1.0f);
+            if (IsServed)
+            {
+                Restart(-1.0f);
+            }
         }     
     }
 
@@ -57,25 +61,35 @@ public class Ball : MonoBehaviour
         IsServed = false;
         position = ballStart;
         transform.position = ballStart;
+
+        if (usePhysics)
+        {
+            Rigidbody.velocity = new Vector2(0.0f, 0.0f);
+        }
     }
 
     private void Restart(float xDir)
     {
-        position = ballStart;
-        transform.position = ballStart;
-        direction = new(xDir, Random.Range(-0.25f, 0.25f));
+        SetUp();
+        IsServed = true;
+        float yDir = RandomChoice(new float[] { -1.0f, 1.0f }) * Random.Range(0.5f, 1.0f);
+        direction = new(xDir, yDir);
 
         if (usePhysics)
         {  
-            Rigidbody.velocity = new Vector2(0.0f, 0.0f);
-            Rigidbody.AddForce(direction * forceMod, ForceMode2D.Impulse);
-        }
+            Rigidbody.AddForce(direction * forceMod);
+        }      
+    }
+
+    private float RandomChoice(float[] array)
+    {
+        return array[Random.Range(0, array.Length)];
     }
 
     private void Move()
     {
         Vector2 previousPos = position;
-        position += speed * direction * Time.deltaTime;
+        position += speed * Time.deltaTime * direction;
 
         if (ParseCollision(position))
         {

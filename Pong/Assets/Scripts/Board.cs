@@ -5,9 +5,13 @@ public class Board : MonoBehaviour
 {
     public GameObject dot;
     public Ball ball;
+    public Paddle player;
+    public Paddle opponent;
     public TMP_Text playerScore;
     public TMP_Text opponentScore;
     public TMP_Text gameText;
+
+    public bool IsRunning { get; set; }
 
     public Rect Bounds
     {
@@ -19,6 +23,11 @@ public class Board : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        IsRunning = false;
+    }
+
     private void Start()
     {
         CreateDottedLine();
@@ -26,10 +35,20 @@ public class Board : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (!IsRunning && Input.GetKeyDown(KeyCode.Space))
         {
+            IsRunning = true;
             Restart();
         }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            IsRunning = false;
+            Restart();
+            gameText.text = "Press Space To Start";
+            ball.SetUp();
+            player.Return();
+            opponent.Return();
+        }    
     }
 
     private void CreateDottedLine()
@@ -56,6 +75,8 @@ public class Board : MonoBehaviour
 
     public void GameOver(Side winner)
     {
+        IsRunning = false;
+
         if (winner == Side.PLAYER)
         {
             gameText.text = "You Win!";

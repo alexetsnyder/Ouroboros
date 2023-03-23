@@ -3,9 +3,11 @@ using UnityEngine;
 public class Paddle : MonoBehaviour
 {
     public Vector2 velocity;
+    public float speed;
     public Board board;
     public Ball ball;
     public bool isAIOn;
+    public bool usePhysics;
     private Vector2 Position { get; set; }
     private string Name { get; set; }
 
@@ -58,10 +60,28 @@ public class Paddle : MonoBehaviour
 
     private void MoveTowardsBall()
     {
-        float ballY = ball.transform.position.y;
-        float yDir = (ballY - transform.position.y < 0) ? -1 : 1;
+        float xDir = (ball.usePhysics) ? ball.Rigidbody.velocity.x : ball.direction.x;
+        float yDir = 0.0f;
 
-        Vector2 direction = new(0.0f, yDir);
-        Move(direction);
+        if (xDir > 0)
+        {
+            float ballY = ball.transform.position.y;
+            yDir = ballY - transform.position.y;
+            yDir = (yDir < 0.0f) ? -1.0f : (yDir > 0.0f) ? 1.0f : 0.0f;       
+        }
+        else if (xDir < 0)
+        {
+            yDir = 0.0f - transform.position.y;
+            yDir = (yDir < 0.0f) ? -1.0f : (yDir > 0.0f) ? 1.0f : 0.0f;
+        }
+
+        Move(new Vector2(0.0f, yDir));
+    }
+
+    public void Return()
+    {
+        Vector2 center = new(Position.x, 0.0f);
+        Position = center;
+        transform.position = center;
     }
 }
