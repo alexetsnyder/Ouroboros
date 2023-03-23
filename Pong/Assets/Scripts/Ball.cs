@@ -3,29 +3,38 @@ using UnityEngine;
 public class Ball : MonoBehaviour
 {
     public Board board;
+    public Paddle player;
+    public Paddle opponent;
     public Vector2 speed;
+    public Vector2 forceMod;
     public Vector2 ballStart;
-    public bool debug;
+    public bool usePhysics;
+
+    private Vector2 position;
+    private Vector2 direction;
     private Rigidbody2D Rigidbody { get; set; }
-    public bool IsServed { get; set; }
+    private bool IsServed { get; set; }
 
     private void Awake()
     {
         Rigidbody = GetComponent<Rigidbody2D>();
         IsServed = false;
+        position = ballStart;
+        direction = new(-1.0f, Random.Range(-0.25f, 0.25f));
     }
 
     private void Update()
     {
-        if (!IsServed)
+        if (!IsServed && Input.GetKeyDown(KeyCode.Space))
         {
             Restart(-1.0f);
             IsServed = true;
         }
 
-        if (debug && Input.GetKeyDown(KeyCode.Space))
+        if (IsServed && !usePhysics)
         {
-            Restart(-1.0f);
+            Move();
+            transform.position = position;
         }
     }
 
@@ -45,9 +54,66 @@ public class Ball : MonoBehaviour
 
     private void Restart(float xDir)
     {
+        position = ballStart;
         transform.position = ballStart;
-        Rigidbody.velocity = new Vector2(0.0f, 0.0f);
-        Vector2 direction = new(-1.0f, Random.Range(-0.5f, 0.5f));
-        Rigidbody.AddForce(direction * speed, ForceMode2D.Impulse);
+        direction = new(xDir, Random.Range(-0.25f, 0.25f));
+
+        if (usePhysics)
+        {  
+            Rigidbody.velocity = new Vector2(0.0f, 0.0f);
+            Rigidbody.AddForce(direction * forceMod, ForceMode2D.Impulse);
+        }
+    }
+
+    private void Move()
+    {
+        Vector2 previousPos = position;
+        position += speed * direction * Time.deltaTime;
+
+        if (ParseCollision(position))
+        {
+            position = previousPos;
+        }
+    }
+
+    private bool ParseCollision(Vector2 position)
+    {
+        bool hasCollided = false;
+        Rect boardBounds = board.Bounds;
+        float radius = transform.localScale.x / 2;
+        float y = position.y;
+
+        if (y - radius <= boardBounds.y ||
+            y + radius >= boardBounds.y + boardBounds.size.y)
+        {
+            direction.y = -direction.y;
+            hasCollided = true;
+        }
+        else if (IsCollision(position, player) ||
+                 IsCollision(position, opponent))
+        {
+            direction.x = -direction.x;
+            hasCollided = true;
+        }
+
+        return hasCollided;
+    }
+
+    private bool IsCollision(Vector2 ballPosition, Paddle paddle)
+    {
+        float radius = transform.localScale.x / 2;
+        Vector2 paddlePos = paddle.transform.position;
+        Vector2 paddleSize = paddle.transform.localScale;
+
+        Vector2 newVector = paddlePos - ballPosition;
+
+
+        if (Mathf.Abs(newVector.x) <= radius + paddleSize.x / 2 &&
+            Mathf.Abs(newVector.y) <= radius + paddleSize.y / 2)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -358,9 +358,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 1694699357}
+  player: {fileID: 1971692922}
+  opponent: {fileID: 1255006643}
   speed: {x: 10, y: 10}
+  forceMod: {x: 0, y: 0}
   ballStart: {x: 0, y: 0}
-  debug: 1
+  usePhysics: 1
 --- !u!50 &445599743
 Rigidbody2D:
   serializedVersion: 4
