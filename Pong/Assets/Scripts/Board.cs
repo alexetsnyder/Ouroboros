@@ -85,6 +85,9 @@ public class Board : MonoBehaviour
         {
             gameText.text = "You Lose!";
         }
+
+        player.Return();
+        opponent.Return();
     }
 
     public void ClearScore()
