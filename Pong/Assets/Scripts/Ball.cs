@@ -7,19 +7,28 @@ public class Ball : MonoBehaviour
     public Paddle opponent;
     public float speed;
     public float forceMod;
+    public float paddleBounceStr = 0.05f;
+    public float wallBounceStr = 0.01f;
     public Vector2 ballStart;
     public bool usePhysics;
 
     private Vector2 position;
     public Vector2 direction;
-    public Rigidbody2D Rigidbody { get; set; }
+    private Rigidbody2D Rigidbody { get; set; }
     private bool IsServed { get; set; }
+
+    public Vector2 Velocity 
+    {
+        get
+        {
+            return (usePhysics) ? Rigidbody.velocity : direction;
+        }
+    }
 
     private void Awake()
     {
         Rigidbody = GetComponent<Rigidbody2D>();
-        SetUp();
-        direction = new(0.0f, 0.0f);
+        SetUp();      
     }
 
     private void Update()
@@ -61,11 +70,20 @@ public class Ball : MonoBehaviour
         IsServed = false;
         position = ballStart;
         transform.position = ballStart;
+        direction = new(0.0f, 0.0f);
 
         if (usePhysics)
         {
             Rigidbody.velocity = new Vector2(0.0f, 0.0f);
         }
+    }
+
+    public void AddForce(Vector2 force)
+    {
+        if (usePhysics)
+        {
+            Rigidbody.AddForce(force);
+        }   
     }
 
     private void Restart(float xDir)
@@ -108,17 +126,29 @@ public class Ball : MonoBehaviour
         if (y - radius <= boardBounds.y ||
             y + radius >= boardBounds.y + boardBounds.size.y)
         {
-            direction.y = -direction.y;
+            direction.y = -GetBounceValue(direction.y, wallBounceStr);
             hasCollided = true;
         }
         else if (IsCollision(position, player) ||
                  IsCollision(position, opponent))
         {
-            direction.x = -direction.x;
+            direction.x = -GetBounceValue(direction.x, paddleBounceStr);
             hasCollided = true;
         }
 
         return hasCollided;
+    }
+
+    private float GetBounceValue(float value, float bounceStr)
+    {
+        if (value < 0)
+        {
+            return value - bounceStr;
+        }
+        else
+        {
+            return value + bounceStr;
+        }
     }
 
     private bool IsCollision(Vector2 ballPosition, Paddle paddle)

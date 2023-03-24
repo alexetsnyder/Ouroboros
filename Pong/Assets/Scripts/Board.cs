@@ -1,6 +1,12 @@
 using UnityEngine;
 using TMPro;
 
+public enum Side
+{
+    PLAYER,
+    OPPONENT,
+}
+
 public class Board : MonoBehaviour
 {
     public GameObject dot;

@@ -24,7 +24,13 @@ public class Paddle : MonoBehaviour
 
     private void Update()
     {
-        ProcessKeyInput();    
+        ProcessKeyInput();   
+        
+        if (!usePhysics)
+        {
+            Move();
+            transform.position = Position;
+        }
     }
 
     private void FixedUpdate()
@@ -32,11 +38,6 @@ public class Paddle : MonoBehaviour
         if (usePhysics)
         {
             ApplyForce();
-        }
-        else
-        {
-            Move();
-            transform.position = Position;
         }
     }
 
@@ -98,7 +99,7 @@ public class Paddle : MonoBehaviour
 
     private Vector2 GetBallDirection()
     {
-        float xVel = (ball.usePhysics) ? ball.Rigidbody.velocity.x : ball.direction.x;
+        float xVel = ball.Velocity.x;
         float yDir = 0.0f;
 
         if (xVel > 0)
@@ -110,7 +111,7 @@ public class Paddle : MonoBehaviour
             yDir = 0.0f - transform.position.y;
         }
 
-        return (yDir <= -1.0f) ? Vector2.down : (yDir >= 1.0f) ? Vector2.up : Vector2.zero;
+        return (yDir < 0.0f) ? Vector2.down : (yDir > 0.0f) ? Vector2.up : Vector2.zero;  
     }
 
     public void Return()

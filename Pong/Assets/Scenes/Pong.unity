@@ -158,7 +158,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -30, y: 240}
+  m_AnchoredPosition: {x: -60, y: 240}
   m_SizeDelta: {x: 50, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &299904109
@@ -208,8 +208,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -268,6 +268,7 @@ GameObject:
   m_Component:
   - component: {fileID: 465488633}
   - component: {fileID: 465488630}
+  - component: {fileID: 465488634}
   m_Layer: 0
   m_Name: BoundsBottom
   m_TagString: Untagged
@@ -316,6 +317,19 @@ Transform:
   m_Father: {fileID: 1694699356}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &465488634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 465488629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc465453f45894a44933a05657df9b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceStrength: 5
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,6 +562,7 @@ GameObject:
   - component: {fileID: 1255006643}
   - component: {fileID: 1255006642}
   - component: {fileID: 1255006641}
+  - component: {fileID: 1255006646}
   m_Layer: 0
   m_Name: Opponent
   m_TagString: Untagged
@@ -618,7 +633,7 @@ MonoBehaviour:
   board: {fileID: 1694699357}
   ball: {fileID: 1833087023}
   isAIOn: 1
-  usePhysics: 1
+  usePhysics: 0
 --- !u!212 &1255006644
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -686,6 +701,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1255006646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1255006640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc465453f45894a44933a05657df9b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceStrength: 20
 --- !u!1 &1265737977
 GameObject:
   m_ObjectHideFlags: 0
@@ -1067,6 +1095,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1795282910}
   - component: {fileID: 1795282907}
+  - component: {fileID: 1795282911}
   m_Layer: 0
   m_Name: BoundsTop
   m_TagString: Untagged
@@ -1115,6 +1144,19 @@ Transform:
   m_Father: {fileID: 1694699356}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1795282911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795282906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc465453f45894a44933a05657df9b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceStrength: 5
 --- !u!1 &1833087020
 GameObject:
   m_ObjectHideFlags: 0
@@ -1199,8 +1241,10 @@ MonoBehaviour:
   opponent: {fileID: 1255006643}
   speed: 6
   forceMod: 200
+  paddleBounceStr: 0.1
+  wallBounceStr: 0.05
   ballStart: {x: 0, y: 0}
-  usePhysics: 1
+  usePhysics: 0
   direction: {x: 0, y: 0}
 --- !u!212 &1833087024
 SpriteRenderer:
@@ -1334,8 +1378,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1401,7 +1445,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 60, y: 240}
+  m_AnchoredPosition: {x: 70, y: 240}
   m_SizeDelta: {x: 50, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1971692919
@@ -1417,6 +1461,7 @@ GameObject:
   - component: {fileID: 1971692922}
   - component: {fileID: 1971692924}
   - component: {fileID: 1971692923}
+  - component: {fileID: 1971692925}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1507,7 +1552,7 @@ MonoBehaviour:
   board: {fileID: 1694699357}
   ball: {fileID: 1833087023}
   isAIOn: 0
-  usePhysics: 1
+  usePhysics: 0
 --- !u!50 &1971692923
 Rigidbody2D:
   serializedVersion: 4
@@ -1555,6 +1600,19 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &1971692925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971692919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc465453f45894a44933a05657df9b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceStrength: 20
 --- !u!1 &2031524170
 GameObject:
   m_ObjectHideFlags: 0
