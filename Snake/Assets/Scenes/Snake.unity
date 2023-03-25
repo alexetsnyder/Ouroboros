@@ -156,6 +156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardSize: {x: 17, y: 15}
+  appleScore: 5
   scoreText: {fileID: 1016334573}
   gameProgressText: {fileID: 1540633435}
 --- !u!156049354 &105667534
