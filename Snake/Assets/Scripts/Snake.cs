@@ -8,16 +8,19 @@ public class Snake : MonoBehaviour
     public float timeDelay;
     public Tile snakeTile;
 
-    private Tilemap TileMap { get; set; }
+    private Tilemap tileMap;
     private Board board;
-    private Queue<Vector2Int> snakeQueue { get; set; }
+    private Apple apple;
+    private Queue<Vector2Int> snakeQueue;
     private Vector2Int direction;
     private float moveTime;
+    private Vector2Int snakeHeadPos;
 
     private void Awake()
     {
-        TileMap = GetComponentInChildren<Tilemap>();
+        tileMap = GetComponentInChildren<Tilemap>();
         board = GetComponent<Board>();
+        apple = GetComponent<Apple>();
         snakeQueue = new Queue<Vector2Int>();
         direction = Vector2Int.zero;
         moveTime = Time.time + timeDelay;
@@ -54,34 +57,42 @@ public class Snake : MonoBehaviour
     {
         Vector2Int snakePosition = new Vector2Int(0, 0);
         snakePosition += spawnOffset;
+        snakeHeadPos = snakePosition;
         snakeQueue.Enqueue(snakePosition);
-        TileMap.SetTile((Vector3Int)snakePosition, snakeTile);
+        tileMap.SetTile((Vector3Int)snakePosition, snakeTile);
     }
 
     private void AutoMoveSnake()
     { 
         if (Time.time >= moveTime)
         {
-            Vector2Int snakeTalePos = snakeQueue.Dequeue();
-            Vector2Int newSnakePos = snakeTalePos + direction;
+            Vector2Int newSnakePos = snakeHeadPos + direction;
 
-            if (board.IsValidPosition(newSnakePos))
+            if (apple.IsApple(newSnakePos))
             {
-                TileMap.SetTile((Vector3Int)snakeTalePos, null);
-                TileMap.SetTile((Vector3Int)newSnakePos, snakeTile);
-                snakeQueue.Enqueue(newSnakePos);
+                AddToSnake(newSnakePos);
+                apple.SetAppleSpawn();
             }
-            else
+            else if (board.IsValidPosition(newSnakePos))
             {
-                snakeQueue.Enqueue(snakeTalePos);
+                RemoveTail();
+                AddToSnake(newSnakePos);
             }
             
             moveTime = Time.time + timeDelay;
         }     
     }
 
-    private void AddToSnake(Vector2Int position)
+    private void AddToSnake(Vector2Int newSnakePos)
     {
-        snakeQueue.Enqueue(position);
+        snakeHeadPos = newSnakePos;
+        tileMap.SetTile((Vector3Int)newSnakePos, snakeTile);
+        snakeQueue.Enqueue(newSnakePos);
+    }
+
+    private void RemoveTail()
+    {
+        Vector2Int snakeTalePos = snakeQueue.Dequeue();
+        tileMap.SetTile((Vector3Int)snakeTalePos, null);
     }
 }

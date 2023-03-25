@@ -1,10 +1,14 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
 {
     public Vector2Int boardSize;
-    public SnakeData[] snakeData;
+    public TMP_Text scoreText;
+    public TMP_Text gameProgressText;
+
+    private Tilemap TileMap { get; set; }
 
     public RectInt Bounds
     {
@@ -15,8 +19,6 @@ public class Board : MonoBehaviour
         }
     }
 
-    private Tilemap TileMap { get; set; }
-
     private void Awake()
     {
         TileMap = GetComponentInChildren<Tilemap>();
@@ -24,16 +26,7 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        //RectInt bounds = Bounds;
 
-        //for (int i = bounds.xMin; i < bounds.xMax; i++)
-        //{
-        //    for (int j = bounds.yMin; j < bounds.yMax; j++)
-        //    {
-        //        Vector3Int position = new Vector3Int(i, j, 0);
-        //        TileMap.SetTile(position, snakeData[0].tile);
-        //    }
-        //}
     }
 
     public bool IsValidPosition(Vector2Int position)
