@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum CardSuit
@@ -27,29 +28,80 @@ public enum CardType
     ACE,
 }
 
-public struct CardData
+public enum CardBackColor
+{
+    BLUE,
+    GREEN,
+    RED,
+}
+
+public enum CardBackType
+{
+    ONE,
+    TWO,
+    THREE,
+    FOUR,
+    FIVE,
+}
+
+public class Card
 {
     public CardSuit suit;
-    public CardType card;
+    public CardType type;
+
     public int value;
     public string filePath;
 
-    public CardData(CardSuit suit, CardType card)
+    public Card(CardSuit suit, CardType card)
     {
         this.suit = suit;
-        this.card = card;
-        this.value = 0;
-        filePath = "";
-
+        this.type = card;
         this.value = GetCardValue();
         filePath = GetFilePrefix() + GetFilePostfix();
     }
 
+    public static string GetBackFilePath(CardBackColor color, CardBackType type)
+    {
+        string filePath = "Cards/cardBack_";
+
+        filePath += Enum.GetName(typeof(CardBackColor), color).ToLower();
+
+        filePath += GetBackTypeString(type);
+
+        return filePath;
+    }
+
+    private static string GetBackTypeString(CardBackType type)
+    {
+        string backType = "";
+
+        switch (type)
+        {
+            case CardBackType.ONE:
+                backType = "1";
+                break;
+            case CardBackType.TWO:
+                backType = "2";
+                break;
+            case CardBackType.THREE:
+                backType = "3";
+                break;
+            case CardBackType.FOUR:
+                backType = "4";
+                break;
+            case CardBackType.FIVE:
+                backType = "5";
+                break;
+        }
+
+        return backType;
+    }
+
     private int GetCardValue()
     {
-        int cardVal = 0 ;
+        int cardVal = 0;
 
-        switch (card)
+        switch (type)
         {
             case CardType.JOKER:
                 cardVal = 14;
@@ -100,7 +152,7 @@ public struct CardData
 
     private string GetFilePrefix()
     {
-        string retVal = "card";
+        string retVal = "Cards/card";
 
         switch (suit)
         {
@@ -125,7 +177,7 @@ public struct CardData
     {
         string retVal = "";
 
-        switch (card)
+        switch (type)
         {
             case CardType.JOKER:
                 retVal = "Joker";
