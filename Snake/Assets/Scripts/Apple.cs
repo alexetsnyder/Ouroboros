@@ -21,6 +21,11 @@ public class Apple : MonoBehaviour
         SetAppleSpawn();
     }
 
+    public bool IsApple(Vector2Int position)
+    {
+        return (position == appleSpawnPos);
+    }
+
     public void SetAppleSpawn()
     {
         GetAppleSpawn();
@@ -48,16 +53,15 @@ public class Apple : MonoBehaviour
         {
             appleSpawnPos = RandomChoice(emptyTileList);
         }
+        else
+        {
+            board.GameWin();
+        }
     }
 
     private void SpawnApple()
     {
         tileMap.SetTile((Vector3Int)appleSpawnPos, appleTile);
-    }
-
-    public bool IsApple(Vector2Int position)
-    {
-        return (position == appleSpawnPos);
     }
 
     private Vector2Int RandomChoice(List<Vector2Int> vectorList)

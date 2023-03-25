@@ -33,43 +33,66 @@ public class Snake : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+        if (board.IsGameRunning())
         {
-            direction = Vector2Int.up;
-        }
-        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            direction = Vector2Int.down;
-        }
-        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            direction = Vector2Int.left;
-        }
-        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            direction = Vector2Int.right;
-        }
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                CheckForGameStart();
+                direction = Vector2Int.up;
+            }
+            else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                CheckForGameStart();
+                direction = Vector2Int.down;
+            }
+            else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                CheckForGameStart();
+                direction = Vector2Int.left;
+            }
+            else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                CheckForGameStart();
+                direction = Vector2Int.right;
+            }
 
-        AutoMoveSnake();      
+            AutoMoveSnake();
+        }          
     }
 
-    private void SpawnSnake()
+    public void StopSnake()
     {
+        direction = Vector2Int.zero;
+    }
+
+    public void SpawnSnake()
+    {
+        snakeQueue.Clear();
+
         Vector2Int snakePosition = new Vector2Int(0, 0);
         snakePosition += spawnOffset;
-        snakeHeadPos = snakePosition;
-        snakeQueue.Enqueue(snakePosition);
-        tileMap.SetTile((Vector3Int)snakePosition, snakeTile);
+
+        AddToSnake(snakePosition);
+    }
+
+    private void CheckForGameStart()
+    {
+        if (direction == Vector2Int.zero)
+        {
+            moveTime = Time.time + timeDelay;
+            board.StartGame();
+        }
     }
 
     private void AutoMoveSnake()
     { 
-        if (Time.time >= moveTime)
+        if (Time.time >= moveTime && direction != Vector2Int.zero)
         {
             Vector2Int newSnakePos = snakeHeadPos + direction;
 
             if (apple.IsApple(newSnakePos))
             {
+                board.UpdateScore();
                 AddToSnake(newSnakePos);
                 apple.SetAppleSpawn();
             }
@@ -77,6 +100,11 @@ public class Snake : MonoBehaviour
             {
                 RemoveTail();
                 AddToSnake(newSnakePos);
+            }
+            else
+            {
+                StopSnake();
+                board.GameOver();
             }
             
             moveTime = Time.time + timeDelay;
