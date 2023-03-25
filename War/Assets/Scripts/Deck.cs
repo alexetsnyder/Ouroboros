@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Deck : MonoBehaviour
 {
@@ -27,20 +28,33 @@ public class Deck : MonoBehaviour
     private void Start()
     {
         ShowDeck();
-        ShowCard();
+        Shuffle();
+        Draw();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            MoveToBottomOfDeck();
+            Draw();
+        }
     }
 
     private void GenerateDeck()
     {
         foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
         {
-            foreach (CardType type in Enum.GetValues(typeof(CardType)))
+            if (suit != CardSuit.NONE)
             {
-                if (type != CardType.JOKER)
+                foreach (CardType type in Enum.GetValues(typeof(CardType)))
                 {
-                    cardList.Add(new Card(suit, type));
-                }    
-            }
+                    if (type != CardType.JOKER)
+                    {
+                        cardList.Add(new Card(suit, type));
+                    }
+                }
+            }  
         }
 
         AddJokers(2);
@@ -61,7 +75,18 @@ public class Deck : MonoBehaviour
         renderer.sprite = Resources.Load<Sprite>(filePath);
     }
 
-    public void ShowCard()
+    public void Shuffle()
+    {
+        for (int i = cardList.Count - 1; i > 0; i--)
+        {
+            int k = Random.Range(0, i + 1);
+            Card card = cardList[k];
+            cardList[k] = cardList[i];
+            cardList[i] = card;
+        }
+    }
+
+    public void Draw()
     {
         Card card = cardList.FirstOrDefault();
         
@@ -76,6 +101,51 @@ public class Deck : MonoBehaviour
             SpriteRenderer renderer = cardShowing.GetComponent<SpriteRenderer>();
             renderer.sprite = Resources.Load<Sprite>(card.filePath);
         }     
+    }
+
+    public Card GetDrawnCard()
+    {
+        return cardList.FirstOrDefault();
+    }
+
+    public void MoveToBottomOfDeck()
+    {
+        Card card = cardList.FirstOrDefault();
+        if (card != null)
+        {
+            MoveToBottomOfDeck(card);
+        }
+    }
+
+    public void MoveToBottomOfDeck(Card card)
+    {
+        cardList.Remove(card);
+        cardList.Add(card);
+    }
+
+    public void Discard()
+    {
+        Card card = cardList.FirstOrDefault();
+        if (card != null)
+        {
+            Discard(card);
+        }
+    }
+
+    public void Discard(Card card)
+    {
+        cardList.Remove(card);
+        discardList.Add(card);
+    }
+
+    public void ReturnCardsFromDiscard()
+    {
+        foreach (Card card in discardList)
+        {
+            cardList.Add(card);
+        }
+
+        discardList.Clear();
     }
 
     public Card GetCardInDeck(int index)
@@ -98,16 +168,5 @@ public class Deck : MonoBehaviour
             }
         }
         return null;
-    }
-
-
-    public void Discard()
-    {
-
-    }
-
-    public void Shuffle()
-    {
-
-    }
+    }  
 }
