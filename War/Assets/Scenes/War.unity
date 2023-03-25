@@ -252,3 +252,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridSize: {x: 4, y: 4}
+  tileSize: 1
