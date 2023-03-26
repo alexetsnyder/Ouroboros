@@ -9,25 +9,25 @@ public class Deck : MonoBehaviour
     public CardBackColor cardBackColor;
     public CardBackType cardBackType;
 
-    private List<Card> cardList;
-    private List<Card> discardList;
+    private List<Card> deckList;
+    private List<Card> drawPileList;
+    private List<Card> discardPileList;
 
-    private Vector2 cardPosition;
-    private GameObject drawnCard;
+    private Vector2 drawPilePosition;
+    private GameObject drawPile;
 
-    private Vector2 discardPosition;
+    private Vector2 discardPilePosition;
     private GameObject discardPile;
 
     private void Awake()
     {
-        cardList = new List<Card>();
-        discardList = new List<Card>();
-        cardPosition = transform.position;
-        cardPosition.y += 2;
-        discardPosition = transform.position;
-        discardPosition.x += 2;
+        deckList = new List<Card>();
+        drawPileList = new List<Card>();
+        discardPileList = new List<Card>();
+        drawPilePosition = transform.position;
+        discardPilePosition = transform.position;
 
-        drawnCard = null;
+        drawPile = null;
         discardPile = null;
         GenerateDeck();
     }
@@ -35,27 +35,36 @@ public class Deck : MonoBehaviour
     private void Start()
     {
         ShowDeck();
-        Shuffle();
-        Draw();
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Discard();
-            Draw();
-        }
+
     }
 
-    public void SetDrawnCardPosition(Vector2 position)
+    public bool IsDeckEmpty()
     {
-        cardPosition = position;
+        return (deckList.Count == 0);
+    }
+
+    public bool IsDrawPileEmpty()
+    {
+        return (drawPileList.Count == 0);
+    }
+
+    public void SetDeckPosition(Vector2 position)
+    {
+        transform.position = position;
+    }
+
+    public void SetDrawPilePosition(Vector2 position)
+    {
+        drawPilePosition = position;
     }
 
     public void SetDiscardPilePosition(Vector2 position)
     {
-        discardPosition = position;
+        discardPilePosition = position;
     }
 
     private void GenerateDeck()
@@ -68,7 +77,7 @@ public class Deck : MonoBehaviour
                 {
                     if (type != CardType.JOKER)
                     {
-                        cardList.Add(new Card(suit, type));
+                        deckList.Add(new Card(suit, type));
                     }
                 }
             }  
@@ -81,7 +90,7 @@ public class Deck : MonoBehaviour
     {
         for (int i = 0; i < number; i++)
         {
-            cardList.Add(new Card(CardSuit.NONE, CardType.JOKER));
+            deckList.Add(new Card(CardSuit.NONE, CardType.JOKER));
         }
     }
 
@@ -94,6 +103,11 @@ public class Deck : MonoBehaviour
 
     public void Shuffle()
     {
+        Shuffle(deckList);
+    }
+
+    private void Shuffle(List<Card> cardList)
+    {
         for (int i = cardList.Count - 1; i > 0; i--)
         {
             int k = Random.Range(0, i + 1);
@@ -105,74 +119,114 @@ public class Deck : MonoBehaviour
 
     public void Draw()
     {
-        Card card = cardList.FirstOrDefault();
+        Card card = deckList.FirstOrDefault();
 
         if (card != null)
         {
-            if (drawnCard == null)
+            deckList.Remove(card);
+            drawPileList.Add(card);
+        }
+
+        ShowDrawPile();
+    }
+
+    private void ShowDrawPile()
+    {
+        Card card = drawPileList.LastOrDefault();
+
+        if (card != null)
+        {
+            if (drawPile == null)
             {
-                drawnCard = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
-                drawnCard.transform.position = cardPosition;
+                drawPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
+                drawPile.transform.position = drawPilePosition;
             }
 
-            SpriteRenderer renderer = drawnCard.GetComponent<SpriteRenderer>();
+            SpriteRenderer renderer = drawPile.GetComponent<SpriteRenderer>();
             renderer.sprite = Resources.Load<Sprite>(card.filePath);
         }
         else
         {
-            if (drawnCard != null)
+            if (drawPile != null)
             {
-                Destroy(drawnCard);
+                Destroy(drawPile);
             }
         }
     }
 
-    public Card GetDrawnCard()
+    public Card GetLastDrawnCard()
     {
-        return cardList.FirstOrDefault();
+        return drawPileList.LastOrDefault();
     }
 
     public void MoveToBottomOfDeck()
     {
-        Card card = cardList.FirstOrDefault();
+        Card card = drawPileList.LastOrDefault();
         if (card != null)
         {
             MoveToBottomOfDeck(card);
         }
     }
 
+    public void MoveAllToBottomOfDeck()
+    {
+        Shuffle(drawPileList);
+
+        foreach (Card card in drawPileList)
+        {
+            deckList.Add(card); 
+        }
+
+        drawPileList.Clear();
+        ShowDrawPile();
+    }
+
     public void MoveToBottomOfDeck(Card card)
     {
-        cardList.Remove(card);
-        cardList.Add(card);
+        drawPileList.Remove(card);
+        deckList.Add(card);
     }
 
     public void Discard()
     {
-        Card card = cardList.FirstOrDefault();
+        Card card = drawPileList.LastOrDefault();
         if (card != null)
         {
             Discard(card);
         }
     }
 
-    public void Discard(Card card)
+    public void DiscardAll()
     {
-        cardList.Remove(card);
-        discardList.Add(card);
-        ShowDiscard();
+        drawPileList.Reverse();
+        foreach (Card card in drawPileList)
+        {
+            discardPileList.Add(card);
+        }
+
+        drawPileList.Clear();
+        ShowDrawPile();
+        ShowDiscardPile();
     }
 
-    private void ShowDiscard()
+    public void Discard(Card card)
     {
-        Card card = discardList.LastOrDefault();
+        drawPileList.Remove(card);
+        discardPileList.Add(card);
+        ShowDrawPile();
+        ShowDiscardPile();
+    }
+
+    private void ShowDiscardPile()
+    {
+        Card card = discardPileList.LastOrDefault();
 
         if (card != null)
         {
             if (discardPile == null)
             {
                 discardPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
-                discardPile.transform.position = discardPosition;
+                discardPile.transform.position = discardPilePosition;
             }
 
             SpriteRenderer renderer = discardPile.GetComponent<SpriteRenderer>();
@@ -189,17 +243,17 @@ public class Deck : MonoBehaviour
 
     public void ReturnCardsFromDiscard()
     {
-        foreach (Card card in discardList)
+        foreach (Card card in discardPileList)
         {
-            cardList.Add(card);
+            deckList.Add(card);
         }
 
-        discardList.Clear();
+        discardPileList.Clear();
     }
 
     public Card GetCardInDeck(int index)
     {
-        return cardList[index];
+        return deckList[index];
     }
 
     public Card GetCardInDeck(Card card)
@@ -209,7 +263,7 @@ public class Deck : MonoBehaviour
 
     public Card GetCardInDeck(CardType type, CardSuit suit)
     {
-        foreach (Card card in cardList)
+        foreach (Card card in deckList)
         {
             if (card.suit == suit && card.type == type)
             {
