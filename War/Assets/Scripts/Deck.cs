@@ -13,7 +13,10 @@ public class Deck : MonoBehaviour
     private List<Card> discardList;
 
     private Vector2 cardPosition;
-    private GameObject cardShowing;
+    private GameObject drawnCard;
+
+    private Vector2 discardPosition;
+    private GameObject discardPile;
 
     private void Awake()
     {
@@ -21,7 +24,11 @@ public class Deck : MonoBehaviour
         discardList = new List<Card>();
         cardPosition = transform.position;
         cardPosition.y += 2;
-        cardShowing = null;
+        discardPosition = transform.position;
+        discardPosition.x += 2;
+
+        drawnCard = null;
+        discardPile = null;
         GenerateDeck();
     }
 
@@ -36,9 +43,19 @@ public class Deck : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            MoveToBottomOfDeck();
+            Discard();
             Draw();
         }
+    }
+
+    public void SetDrawnCardPosition(Vector2 position)
+    {
+        cardPosition = position;
+    }
+
+    public void SetDiscardPilePosition(Vector2 position)
+    {
+        discardPosition = position;
     }
 
     private void GenerateDeck()
@@ -89,18 +106,25 @@ public class Deck : MonoBehaviour
     public void Draw()
     {
         Card card = cardList.FirstOrDefault();
-        
+
         if (card != null)
         {
-            if (cardShowing == null)
+            if (drawnCard == null)
             {
-                cardShowing = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
-                cardShowing.transform.position = cardPosition;
+                drawnCard = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
+                drawnCard.transform.position = cardPosition;
             }
 
-            SpriteRenderer renderer = cardShowing.GetComponent<SpriteRenderer>();
+            SpriteRenderer renderer = drawnCard.GetComponent<SpriteRenderer>();
             renderer.sprite = Resources.Load<Sprite>(card.filePath);
-        }     
+        }
+        else
+        {
+            if (drawnCard != null)
+            {
+                Destroy(drawnCard);
+            }
+        }
     }
 
     public Card GetDrawnCard()
@@ -136,6 +160,31 @@ public class Deck : MonoBehaviour
     {
         cardList.Remove(card);
         discardList.Add(card);
+        ShowDiscard();
+    }
+
+    private void ShowDiscard()
+    {
+        Card card = discardList.LastOrDefault();
+
+        if (card != null)
+        {
+            if (discardPile == null)
+            {
+                discardPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
+                discardPile.transform.position = discardPosition;
+            }
+
+            SpriteRenderer renderer = discardPile.GetComponent<SpriteRenderer>();
+            renderer.sprite = Resources.Load<Sprite>(card.filePath);
+        }
+        else
+        {
+            if (discardPile != null)
+            {
+                Destroy(discardPile);
+            }
+        }
     }
 
     public void ReturnCardsFromDiscard()
