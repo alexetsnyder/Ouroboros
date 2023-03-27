@@ -104,6 +104,9 @@ public class Card
         switch (type)
         {
             case CardType.JOKER:
+                cardVal = 15;
+                break;
+            case CardType.ACE:
                 cardVal = 14;
                 break;
             case CardType.KING:
@@ -141,10 +144,7 @@ public class Card
                 break;
             case CardType.TWO:
                 cardVal = 2;
-                break;
-            case CardType.ACE:
-                cardVal = 1;
-                break;
+                break;  
         }
 
         return cardVal;

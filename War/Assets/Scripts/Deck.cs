@@ -10,36 +10,26 @@ public class Deck : MonoBehaviour
     public CardBackType cardBackType;
 
     private List<Card> deckList;
-    private List<Card> drawPileList;
-    private List<Card> discardPileList;
+    //private List<Card> drawPileList;
+    //private List<Card> discardPileList;
 
-    private Vector2 drawPilePosition;
-    private GameObject drawPile;
+    //private Vector2 drawPilePosition;
+    //private GameObject drawPile;
 
-    private Vector2 discardPilePosition;
-    private GameObject discardPile;
+    //private Vector2 discardPilePosition;
+    //private GameObject discardPile;
 
     private void Awake()
     {
         deckList = new List<Card>();
-        drawPileList = new List<Card>();
-        discardPileList = new List<Card>();
-        drawPilePosition = transform.position;
-        discardPilePosition = transform.position;
+        //drawPileList = new List<Card>();
+        //discardPileList = new List<Card>();
+        //drawPilePosition = transform.position;
+        //discardPilePosition = transform.position;
 
-        drawPile = null;
-        discardPile = null;
-        GenerateDeck();
-    }
-
-    private void Start()
-    {
-        ShowDeck();
-    }
-
-    private void Update()
-    {
-
+        //drawPile = null;
+        //discardPile = null;
+        //GenerateDeck();
     }
 
     public bool IsDeckEmpty()
@@ -47,27 +37,32 @@ public class Deck : MonoBehaviour
         return (deckList.Count == 0);
     }
 
-    public bool IsDrawPileEmpty()
-    {
-        return (drawPileList.Count == 0);
-    }
+    //public bool IsDrawPileEmpty()
+    //{
+    //    return (drawPileList.Count == 0);
+    //}
 
     public void SetDeckPosition(Vector2 position)
     {
         transform.position = position;
     }
 
-    public void SetDrawPilePosition(Vector2 position)
+    public void Add(Card card)
     {
-        drawPilePosition = position;
+        deckList.Add(card);
     }
 
-    public void SetDiscardPilePosition(Vector2 position)
-    {
-        discardPilePosition = position;
-    }
+    //public void SetDrawPilePosition(Vector2 position)
+    //{
+    //    drawPilePosition = position;
+    //}
 
-    private void GenerateDeck()
+    //public void SetDiscardPilePosition(Vector2 position)
+    //{
+    //    discardPilePosition = position;
+    //}
+
+    public void GenerateStandardDeck()
     {
         foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
         {
@@ -94,11 +89,36 @@ public class Deck : MonoBehaviour
         }
     }
 
-    private void ShowDeck()
+    public void ShowDeck()
     {
-        string filePath = Card.GetBackFilePath(cardBackColor, cardBackType);
-        SpriteRenderer renderer =  gameObject.AddComponent<SpriteRenderer>();
-        renderer.sprite = Resources.Load<Sprite>(filePath);
+        SpriteRenderer renderer = gameObject.GetComponent<SpriteRenderer>();
+        if (deckList.Count > 0)
+        {
+            string filePath = Card.GetBackFilePath(cardBackColor, cardBackType); 
+            renderer.sprite = Resources.Load<Sprite>(filePath);
+        }
+        else
+        {
+            renderer.sprite = null;
+        }
+    }
+
+    public void ShowTopCard()
+    {
+        SpriteRenderer renderer = gameObject.GetComponent<SpriteRenderer>();
+        if (deckList.Count > 0)
+        {
+            Card card = deckList.LastOrDefault();
+
+            if (card != null)
+            {   
+                renderer.sprite = Resources.Load<Sprite>(card.filePath);
+            }
+        }
+        else
+        {
+            renderer.sprite = null;
+        }
     }
 
     public void Shuffle()
@@ -117,139 +137,156 @@ public class Deck : MonoBehaviour
         }
     }
 
-    public void Draw()
+    public Card Peek()
     {
-        Card card = deckList.FirstOrDefault();
+        return deckList.LastOrDefault();
+    }
+
+    public Card Draw()
+    {
+        Card card = deckList.LastOrDefault();
 
         if (card != null)
         {
             deckList.Remove(card);
-            drawPileList.Add(card);
+            //drawPileList.Add(card);
+            return card;
         }
 
-        ShowDrawPile();
+        return null;
+        //ShowDrawPile();
     }
 
-    private void ShowDrawPile()
+    public List<Card> GetAllCards()
     {
-        Card card = drawPileList.LastOrDefault();
-
-        if (card != null)
-        {
-            if (drawPile == null)
-            {
-                drawPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
-                drawPile.transform.position = drawPilePosition;
-            }
-
-            SpriteRenderer renderer = drawPile.GetComponent<SpriteRenderer>();
-            renderer.sprite = Resources.Load<Sprite>(card.filePath);
-        }
-        else
-        {
-            if (drawPile != null)
-            {
-                Destroy(drawPile);
-            }
-        }
+        return deckList;
     }
 
-    public Card GetLastDrawnCard()
+    public void RemoveAll()
     {
-        return drawPileList.LastOrDefault();
+        deckList.Clear();
     }
 
-    public void MoveToBottomOfDeck()
-    {
-        Card card = drawPileList.LastOrDefault();
-        if (card != null)
-        {
-            MoveToBottomOfDeck(card);
-        }
-    }
+    //private void ShowDrawPile()
+    //{
+    //    Card card = drawPileList.LastOrDefault();
 
-    public void MoveAllToBottomOfDeck()
-    {
-        Shuffle(drawPileList);
+    //    if (card != null)
+    //    {
+    //        if (drawPile == null)
+    //        {
+    //            drawPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
+    //            drawPile.transform.position = drawPilePosition;
+    //        }
 
-        foreach (Card card in drawPileList)
-        {
-            deckList.Add(card); 
-        }
+    //        SpriteRenderer renderer = drawPile.GetComponent<SpriteRenderer>();
+    //        renderer.sprite = Resources.Load<Sprite>(card.filePath);
+    //    }
+    //    else
+    //    {
+    //        if (drawPile != null)
+    //        {
+    //            Destroy(drawPile);
+    //        }
+    //    }
+    //}
 
-        drawPileList.Clear();
-        ShowDrawPile();
-    }
+    //public Card GetLastDrawnCard()
+    //{
+    //    return drawPileList.LastOrDefault();
+    //}
 
-    public void MoveToBottomOfDeck(Card card)
-    {
-        drawPileList.Remove(card);
-        deckList.Add(card);
-    }
+    //public void MoveToBottomOfDeck()
+    //{
+    //    Card card = drawPileList.LastOrDefault();
+    //    if (card != null)
+    //    {
+    //        MoveToBottomOfDeck(card);
+    //    }
+    //}
 
-    public void Discard()
-    {
-        Card card = drawPileList.LastOrDefault();
-        if (card != null)
-        {
-            Discard(card);
-        }
-    }
+    //public void MoveAllToBottomOfDeck()
+    //{
+    //    Shuffle(drawPileList);
 
-    public void DiscardAll()
-    {
-        drawPileList.Reverse();
-        foreach (Card card in drawPileList)
-        {
-            discardPileList.Add(card);
-        }
+    //    foreach (Card card in drawPileList)
+    //    {
+    //        deckList.Add(card); 
+    //    }
 
-        drawPileList.Clear();
-        ShowDrawPile();
-        ShowDiscardPile();
-    }
+    //    drawPileList.Clear();
+    //    ShowDrawPile();
+    //}
 
-    public void Discard(Card card)
-    {
-        drawPileList.Remove(card);
-        discardPileList.Add(card);
-        ShowDrawPile();
-        ShowDiscardPile();
-    }
+    //public void MoveToBottomOfDeck(Card card)
+    //{
+    //    //drawPileList.Remove(card);
+    //    deckList.Add(card);
+    //}
 
-    private void ShowDiscardPile()
-    {
-        Card card = discardPileList.LastOrDefault();
+    //public void Discard()
+    //{
+    //    Card card = drawPileList.LastOrDefault();
+    //    if (card != null)
+    //    {
+    //        Discard(card);
+    //    }
+    //}
 
-        if (card != null)
-        {
-            if (discardPile == null)
-            {
-                discardPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
-                discardPile.transform.position = discardPilePosition;
-            }
+    //public void DiscardAll()
+    //{
+    //    drawPileList.Reverse();
+    //    foreach (Card card in drawPileList)
+    //    {
+    //        discardPileList.Add(card);
+    //    }
 
-            SpriteRenderer renderer = discardPile.GetComponent<SpriteRenderer>();
-            renderer.sprite = Resources.Load<Sprite>(card.filePath);
-        }
-        else
-        {
-            if (discardPile != null)
-            {
-                Destroy(discardPile);
-            }
-        }
-    }
+    //    drawPileList.Clear();
+    //    ShowDrawPile();
+    //    ShowDiscardPile();
+    //}
 
-    public void ReturnCardsFromDiscard()
-    {
-        foreach (Card card in discardPileList)
-        {
-            deckList.Add(card);
-        }
+    //public void Discard(Card card)
+    //{
+    //    drawPileList.Remove(card);
+    //    discardPileList.Add(card);
+    //    ShowDrawPile();
+    //    ShowDiscardPile();
+    //}
 
-        discardPileList.Clear();
-    }
+    //private void ShowDiscardPile()
+    //{
+    //    Card card = discardPileList.LastOrDefault();
+
+    //    if (card != null)
+    //    {
+    //        if (discardPile == null)
+    //        {
+    //            discardPile = (GameObject)Instantiate(Resources.Load("EmptyCard"), transform);
+    //            discardPile.transform.position = discardPilePosition;
+    //        }
+
+    //        SpriteRenderer renderer = discardPile.GetComponent<SpriteRenderer>();
+    //        renderer.sprite = Resources.Load<Sprite>(card.filePath);
+    //    }
+    //    else
+    //    {
+    //        if (discardPile != null)
+    //        {
+    //            Destroy(discardPile);
+    //        }
+    //    }
+    //}
+
+    //public void ReturnCardsFromDiscard()
+    //{
+    //    foreach (Card card in discardPileList)
+    //    {
+    //        deckList.Add(card);
+    //    }
+
+    //    discardPileList.Clear();
+    //}
 
     public Card GetCardInDeck(int index)
     {
