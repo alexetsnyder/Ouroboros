@@ -28,6 +28,94 @@ public class Board : MonoBehaviour
         NewGame();
     }
 
+    public void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            SelectTile();
+        }
+    }
+
+    private void SelectTile()
+    {
+        Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2Int cellPos  = (Vector2Int)tileMap.WorldToCell(worldPos);
+        Vector2Int arrayIndex = CellToArrayIndex(cellPos);
+
+        if (IsValid(arrayIndex))
+        {
+            Reveal(arrayIndex);
+        }
+    }
+
+    private Vector2Int CellToArrayIndex(Vector2Int cellPos)
+    {
+        return new Vector2Int(cellPos.x + rows / 2, cellPos.y + cols / 2);
+    }
+
+    private void Reveal(Vector2Int position)
+    {
+        var tile = mineTiles[position.x, position.y];
+
+        switch (tile.type)
+        {
+            case MineType.EMPTY:
+                Flood(position);
+                break;
+            case MineType.NUMBER:
+                tile.isRevealed = true;
+                mineTiles[position.x, position.y] = tile;
+                break;
+            case MineType.MINE:
+                tile.hasExploded = true;
+                tile.isRevealed = true;
+                mineTiles[position.x, position.y] = tile;
+                Explode();
+                break;
+        }
+ 
+        Draw();
+    }
+
+    private void Flood(Vector2Int position)
+    {
+        if (!IsValid(position))
+        {
+            return;
+        }
+
+        var tile = mineTiles[position.x, position.y];
+        if (tile.isRevealed || tile.type == MineType.MINE)
+        {
+            return;
+        }
+
+        mineTiles[position.x, position.y].isRevealed = true;
+
+        if (tile.type == MineType.EMPTY)
+        {
+            Flood(position + Vector2Int.left);
+            Flood(position + Vector2Int.right);
+            Flood(position + Vector2Int.up);
+            Flood(position + Vector2Int.down);
+        }
+    }
+
+    private void Explode()
+    {
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+            {
+                var tile = mineTiles[row, col];
+                if (tile.type == MineType.MINE && !tile.isRevealed)
+                {
+                    mineTiles[row, col].isRevealed = true;
+                }
+            }
+        }
+    }
+
     private void LoadResources()
     {
         string namePrefix = "Tile";
