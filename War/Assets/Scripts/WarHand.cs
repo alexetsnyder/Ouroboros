@@ -40,7 +40,7 @@ public class WarHand : MonoBehaviour
 
     public void Take(Card card)
     {
-        playerHand.Add(card);
+        playerHand.AddToBottom(card);
     }
 
     public void UnDraw()
@@ -82,5 +82,10 @@ public class WarHand : MonoBehaviour
         ShowHand();
 
         return cards;
+    }
+
+    public int HandCount()
+    {
+        return playerHand.Count();
     }
 }

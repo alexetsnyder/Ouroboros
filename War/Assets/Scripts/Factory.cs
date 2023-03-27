@@ -13,9 +13,4 @@ public class Factory : MonoBehaviour
         GameObject goDeck = (GameObject)Instantiate(Resources.Load("Deck"), parent);
         return goDeck.GetComponent<Deck>();
     }
-
-    public static GameObject CreateEmptyCard(Transform parent)
-    {
-        return (GameObject)Instantiate(Resources.Load("Deck"), parent);
-    }
 }

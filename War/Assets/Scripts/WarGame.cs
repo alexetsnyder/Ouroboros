@@ -1,8 +1,25 @@
+using System;
+using TMPro;
 using UnityEngine;
+
+public class MouseButton
+{
+    public const int LEFT = 0;
+    public const int RIGHT = 1;
+    public const int MIDDLE_CLICK = 2;
+}
 
 public class WarGame : MonoBehaviour
 {
     public CardViewerUI cardViewerUI;
+    
+    public TMP_Text gameStatus;
+
+    public TMP_Text playerStatus;
+    public TMP_Text playerDeckCount;
+
+    public TMP_Text opponentStatus;
+    public TMP_Text opponentDeckCount;
 
     private Deck playingCards;
     private WarHand playersHand;
@@ -25,10 +42,11 @@ public class WarGame : MonoBehaviour
 
     public void Start()
     {
-        SetUp();
+        SetPositions();
         Shuffle();
         Deal();
         ShowGame();
+        SetUp();
     }
 
     public void Update()
@@ -42,13 +60,18 @@ public class WarGame : MonoBehaviour
         {
             if (!hasDrawn)
             {
+                ClearWinner();
                 Draw();
                 hasDrawn = true;
+                gameStatus.text = "Evaluate!";
+                UpdateDeckCount();
             }
             else
             {
                 Evaluate();
                 hasDrawn = false;
+                gameStatus.text = "Draw!";
+                UpdateDeckCount();
             }
         }
     }
@@ -70,13 +93,23 @@ public class WarGame : MonoBehaviour
         }
     }
 
+    public void SetPositions()
+    {
+        playersHand.SetHandPosition(new Vector2(0.0f, -5.0f));
+        playersHand.SetDrawPilePosition(new Vector2(0.0f, -2.0f));
+
+        opponentsHand.SetHandPosition(new Vector2(0.0f, 5.0f));
+        opponentsHand.SetDrawPilePosition(new Vector2(0.0f, 2.0f));
+    }
+
     public void SetUp()
     {
-        playersHand.SetHandPosition(new Vector2(0.0f, -3.0f));
-        playersHand.SetDrawPilePosition(new Vector2(0.0f, -1.0f));
+        playerStatus.text = "";
+        opponentStatus.text = "";
 
-        opponentsHand.SetHandPosition(new Vector2(0.0f, 3.0f));
-        opponentsHand.SetDrawPilePosition(new Vector2(0.0f, 1.0f));
+        UpdateDeckCount();
+
+        gameStatus.text = "Begin!";
     }
 
     public void Shuffle()
@@ -112,8 +145,19 @@ public class WarGame : MonoBehaviour
 
     public void Draw()
     {
+        if(IsGameOver())
+        {
+            isGameOver = true;
+            GameOver();
+        }
+
         playersHand.Draw();
         opponentsHand.Draw();
+    }
+
+    private void GameOver()
+    {
+        gameStatus.text = "Game Over!";
     }
 
     public void Evaluate()
@@ -125,18 +169,57 @@ public class WarGame : MonoBehaviour
         {
             playersHand.UnDraw();
             playersHand.TakeAll(opponentsHand.GetAllDrawnCards());
+            UpdatePlayerWin();
         }
         else if (playersCard.value < opponentsCard.value)
         {
             opponentsHand.UnDraw();
             opponentsHand.TakeAll(playersHand.GetAllDrawnCards());
+            UpdateOpponentWin();
         }
         else
         {
-            playersHand.Draw();
-            opponentsHand.Draw();
+            Draw();
+            if (IsGameOver())
+            {
+                isGameOver = true;
+                GameOver();
+            }
         }
 
         ShowGame();
+    }
+
+    public void UpdateDeckCount()
+    {
+        playerDeckCount.text = playersHand.HandCount().ToString();
+        opponentDeckCount.text = opponentsHand.HandCount().ToString();
+    }
+
+    public void ClearWinner()
+    {
+        playerStatus.text = "";
+        opponentStatus.text = "";
+    }
+
+    public void UpdatePlayerWin()
+    {
+        playerStatus.text = "Winner!";
+        opponentStatus.text = "Loser!";
+    }
+
+    public void UpdateOpponentWin()
+    {
+        playerStatus.text = "Loser!";
+        opponentStatus.text = "Winner!";
+    }
+
+    public bool IsGameOver()
+    {
+        if (playersHand.HandCount() == 0 || opponentsHand.HandCount() == 0)
+        {
+            return true;
+        }
+        return false;
     }
 }
