@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -15,7 +14,14 @@ public class Board : MonoBehaviour
 
     private Dictionary<string, Tile> resources;
 
-    public void Awake()
+    private bool isGameOver;
+
+    private void OnValidate()
+    {
+        mineCount = Mathf.Clamp(mineCount, 0, rows * cols);
+    }
+
+    private void Awake()
     {
         tileMap = GetComponentInChildren<Tilemap>();
         
@@ -23,29 +29,75 @@ public class Board : MonoBehaviour
         LoadResources();
     }
 
-    public void Start()
+    private void Start()
     {
         NewGame();
     }
 
-    public void Update()
+    private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (isGameOver && Input.GetKeyDown(KeyCode.R))
         {
-            SelectTile();
+            NewGame();
         }
+
+        if (!isGameOver)
+        {
+            if (Input.GetMouseButtonDown(1))
+            {
+                FlagTile();
+            }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                SelectTile();
+            }
+        }       
+    }
+
+    private void FlagTile()
+    {
+        Vector2Int? tilePos = GetTilePosition();
+        if (tilePos.HasValue)
+        {
+            Flag(tilePos.Value);
+        }
+    }
+
+    private void Flag(Vector2Int arrayIndex)
+    {
+        var tile = mineTiles[arrayIndex.x, arrayIndex.y];
+        
+        if (!tile.isRevealed)
+        {
+            tile.isFlagged = !tile.isFlagged;
+            mineTiles[arrayIndex.x, arrayIndex.y] = tile;
+        }
+
+        Draw();
     }
 
     private void SelectTile()
     {
-        Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2Int cellPos  = (Vector2Int)tileMap.WorldToCell(worldPos);
-        Vector2Int arrayIndex = CellToArrayIndex(cellPos);
-
-        if (IsValid(arrayIndex))
+        Vector2Int? tilePos = GetTilePosition();
+        if (tilePos.HasValue)
         {
-            Reveal(arrayIndex);
+            Reveal(tilePos.Value);
+        }   
+    }
+
+    private Vector2Int? GetTilePosition()
+    {
+        Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2Int cellPos = (Vector2Int)tileMap.WorldToCell(worldPos);
+        Vector2Int arrayIndexPos = CellToArrayIndex(cellPos);
+
+        if (IsValid(arrayIndexPos))
+        {
+            return arrayIndexPos;
         }
+
+        return null;
     }
 
     private Vector2Int CellToArrayIndex(Vector2Int cellPos)
@@ -57,14 +109,21 @@ public class Board : MonoBehaviour
     {
         var tile = mineTiles[position.x, position.y];
 
+        if (tile.isRevealed || tile.isFlagged)
+        {
+            return;
+        }
+
         switch (tile.type)
         {
             case MineType.EMPTY:
                 Flood(position);
+                CheckWinCondition();
                 break;
             case MineType.NUMBER:
                 tile.isRevealed = true;
                 mineTiles[position.x, position.y] = tile;
+                CheckWinCondition();
                 break;
             case MineType.MINE:
                 tile.hasExploded = true;
@@ -75,6 +134,36 @@ public class Board : MonoBehaviour
         }
  
         Draw();
+    }
+
+    private void CheckWinCondition()
+    {
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+            {
+                var tile = mineTiles[row, col];
+                if (tile.type != MineType.MINE && !tile.isRevealed)
+                {
+                    return;
+                }
+            }
+        }
+
+        Debug.Log("You Won!");
+        isGameOver = true;
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+            {
+                var tile = mineTiles[row, col];
+                if (tile.type == MineType.MINE)
+                {
+                    mineTiles[row, col].isFlagged = true;
+                }
+            }
+        }
     }
 
     private void Flood(Vector2Int position)
@@ -103,6 +192,8 @@ public class Board : MonoBehaviour
 
     private void Explode()
     {
+        isGameOver = true;
+
         for (int row = 0; row < rows; row++)
         {
             for (int col = 0; col < cols; col++)
@@ -144,6 +235,7 @@ public class Board : MonoBehaviour
 
     public void NewGame()
     {
+        isGameOver = false;
         mineTiles = new MineTile[rows, cols];
 
         GenerateTiles();
@@ -163,37 +255,6 @@ public class Board : MonoBehaviour
                 MineTile tile = new MineTile(MineType.EMPTY, tilePos);
                 mineTiles[row, col] = tile;    
             }
-        }
-    }
-
-    public void GenerateMinesOld()
-    {
-        for (int i = 0; i < mineCount; i++)
-        {
-            int row = Random.Range(0, rows);
-            int col = Random.Range(0, cols);
-
-            var tile = mineTiles[row, col];
-
-            while (tile.type == MineType.MINE)
-            {
-                row++;
-
-                if (row >= rows)
-                {
-                    row = 0;
-                    col++;
-
-                    if (col >= cols)
-                    {
-                        col = 0;
-                    }
-                }
-
-                tile = mineTiles[row, col];
-            }
-
-            mineTiles[row, col].type = MineType.MINE;
         }
     }
 
