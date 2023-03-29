@@ -5,6 +5,8 @@ public class ViewerController : MonoBehaviour
 {
     public int regions;
     public Vector2Int imageSize;
+    public DrawLine drawLine;
+    public Transform circleTransform;
 
     private VoronoiDiagram voronoiDiagram;
 
@@ -14,8 +16,53 @@ public class ViewerController : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
-        GenerateDiagram();
-        DrawDiagramWithColors();
+        //GenerateDiagram();
+        //DrawDiagramWithColors();
+    }
+
+    private void Start()
+    {
+        TestGeometry();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            TestGeometry();
+        }
+    }
+
+    public void TestGeometry()
+    {
+        drawLine.ClearLines();
+
+        Vector2 p1 = GetRandomVector2(-10, 10);
+        Vector2 p2 = GetRandomVector2(-10, 10);
+        Vector2 p3 = GetRandomVector2(-10, 10);
+
+        Triangle triangle = new Triangle(p1, p2, p3);
+
+        drawLine.SetUpTriangle(triangle.GetVertices());
+
+        Line perpLine1 = Line.PerpendicularBisector(triangle.v1, triangle.v2);
+        Line perpLine2 = Line.PerpendicularBisector(triangle.v2, triangle.v3);
+
+        Vector2 center = perpLine1.Intersect(perpLine2);
+        Vector2 line1Mid = Line.MidPoint(triangle.v1, triangle.v2);
+        Vector2 line2Mid = Line.MidPoint(triangle.v2, triangle.v3);
+
+        drawLine.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
+
+        float radius = triangle.CircumRadius(center);
+
+        circleTransform.position = center;
+        circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
+    }
+
+    public Vector2 GetRandomVector2(int min, int max)
+    {
+        return new Vector2(Random.Range(min, max), Random.Range(min, max));
     }
 
     public void GenerateDiagram()
