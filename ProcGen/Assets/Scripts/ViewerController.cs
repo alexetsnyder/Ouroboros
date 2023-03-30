@@ -30,7 +30,7 @@ public class ViewerController : MonoBehaviour
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
         drawList = new List<DrawLine>();
         GeneratePoints();
-        //DrawDiagramWithColors();
+
         index = 0;
         superTriangleList = new List<Triangle>();
         dotVertexList = new List<GameObject>();
@@ -82,6 +82,12 @@ public class ViewerController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Select();
+        }
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            ClearAll();
+            DrawDiagramWithColors();
         }
     }
 
