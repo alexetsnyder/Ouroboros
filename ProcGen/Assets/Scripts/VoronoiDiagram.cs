@@ -5,6 +5,8 @@ public class Triangle
 {
     private Vector2[] vertices;
     private Edge[] edges;
+    private Vector2 circumCenter;
+    public float circumRadius;
 
     public Vector2 v1
     {
@@ -41,6 +43,9 @@ public class Triangle
         edges[0] = new Edge(v1, v2);
         edges[1] = new Edge(v2, v3);
         edges[2] = new Edge(v3, v1);
+
+        circumCenter = CircumscribedCircleCenter();
+        circumRadius = CircumscribedCircleRadius();
     }
 
     public Vector2[] GetVertices()
@@ -58,25 +63,23 @@ public class Triangle
         return (point == v1 || point == v2 || point == v3);
     }
 
-    public bool InCircumCircle(Vector2 point)
-    {
-        Vector2 center = CircumCenter();
-        float radius = CircumRadius(center);
-        float distance = Vector2.Distance(point, center);
+    public bool IsPointInsideCircumscribedCircle(Vector2 point)
+    {;
+        float distance = Vector2.Distance(circumCenter, point);
 
-        return (distance < radius);
+        return (distance < circumRadius);
     }
 
-    public Vector2 CircumCenter()
+    public Vector2 CircumscribedCircleCenter()
     {
         Line perpLine1 = Line.PerpendicularBisector(v1, v2);
         Line perpLine2 = Line.PerpendicularBisector(v2, v3);
         return perpLine1.Intersect(perpLine2);
     }
 
-    public float CircumRadius(Vector2 center)
+    public float CircumscribedCircleRadius()
     {
-        return Vector2.Distance(center, v1);
+        return Vector2.Distance(circumCenter, v1);
     }
 }
 
@@ -100,35 +103,11 @@ public class Edge : System.IEquatable<Edge>
         }
     }
 
-    public float Length
-    {
-        get
-        {
-            return Vector2.Distance(v1, v2);
-        }
-    }
-
     public Edge(Vector2 v1, Vector2 v2)
     {
         vertices = new Vector2[2];
         vertices[0] = v1;
         vertices[1] = v2;
-    }
-
-    public bool IsRightToLeft()
-    {
-        if (v1.x > v2.x)
-        {
-            return true;
-        }
-        return false;
-    }
-
-    public void Flip()
-    {
-        Vector2 temp = vertices[0];
-        vertices[0] = vertices[1];
-        vertices[1] = temp;
     }
 
     public bool Equals(Edge other)
@@ -230,7 +209,7 @@ public class VoronoiDiagram
             float green = Random.Range(0.0f, 1.0f);
             float blue = Random.Range(0.0f, 1.0f);
 
-            Vector2Int randomPoint = new Vector2Int(Random.Range(0, size.x), Random.Range(0, size.y));
+            Vector2Int randomPoint = new Vector2Int(Random.Range(1, size.x - 1), Random.Range(1, size.y - 1));
 
             vPoints[i] = randomPoint;
             vColors[i] = new Color(red, green, blue);
@@ -252,7 +231,7 @@ public class VoronoiDiagram
 
         RemoveSuperTriangle(triangles, origin, maxYV, maxXV);
 
-        TestTriangulation(triangles);
+        TestTriangulation(triangles, vPoints);
 
         return triangles;
     }
@@ -262,17 +241,17 @@ public class VoronoiDiagram
         List<Triangle> badTriangles = new List<Triangle>();
         List<Edge> polygon = new List<Edge>();
 
-        FindInvalidTriangles(triangles, newPoint, badTriangles);
+        FindBadTriangles(triangles, newPoint, badTriangles);
         GetPolygonFromBadTriangles(badTriangles, polygon);
-        RemoveInvalidTriangles(triangles, badTriangles);
+        RemoveBadTriangles(triangles, badTriangles);
         FillInPolygon(triangles, newPoint, polygon);
     }
 
-    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles)
+    private void FindBadTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles)
     {
         foreach (Triangle triangle in triangles)
         {
-            if (triangle.InCircumCircle(newPoint))
+            if (triangle.IsPointInsideCircumscribedCircle(newPoint))
             {
                 badTriangles.Add(triangle); 
             }
@@ -281,7 +260,7 @@ public class VoronoiDiagram
 
     private void GetPolygonFromBadTriangles(List<Triangle> badTriangles, List<Edge> polygon)
     {
-        List<Edge> badEdges = new List<Edge>();
+        List<Edge> sharedEdges = new List<Edge>();
         foreach (var triangle in badTriangles)
         {
             foreach (var edge in triangle.GetEdges())
@@ -292,21 +271,21 @@ public class VoronoiDiagram
                 }
                 else
                 {
-                    if (!badEdges.Contains(edge))
+                    if (!sharedEdges.Contains(edge))
                     {
-                        badEdges.Add(edge);
+                        sharedEdges.Add(edge);
                     }
                 }
             }
         }
 
-        foreach (var edge in badEdges)
+        foreach (var edge in sharedEdges)
         {
             polygon.Remove(edge);
         }
     }
 
-    private void RemoveInvalidTriangles(List<Triangle> triangles, List<Triangle> badTriangles)
+    private void RemoveBadTriangles(List<Triangle> triangles, List<Triangle> badTriangles)
     {
         foreach (Triangle triangle in badTriangles)
         {
@@ -318,7 +297,10 @@ public class VoronoiDiagram
     {
         foreach (Edge edge in polygon)
         {
-            triangles.Add(new Triangle(edge.v1, edge.v2, newPoint));
+            if (edge.v1 != newPoint && edge.v2 != newPoint)
+            {
+                triangles.Add(new Triangle(newPoint, edge.v1, edge.v2));
+            }      
         }
     }
 
@@ -341,19 +323,16 @@ public class VoronoiDiagram
         }
     }
 
-    public void TestTriangulation(List<Triangle> triangles)
+    public void TestTriangulation(List<Triangle> triangles, Vector2Int[] points)
     {
-        foreach (var triangle in triangles)
+        foreach (var point in points)
         {
-            foreach (var point in triangle.GetVertices())
+            foreach (var triangle in triangles)
             {
-                foreach (var innerTriangle in triangles)
+                if (!triangle.Contains(point) && triangle.IsPointInsideCircumscribedCircle(point))
                 {
-                    if (innerTriangle.InCircumCircle(point))
-                    {
-                        Debug.Log("Triangulation Failed!!!");
-                        return;
-                    }
+                    Debug.Log("Triangulation Failed!!!");
+                    return;
                 }
             }
         }

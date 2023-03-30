@@ -6,9 +6,10 @@ public class ViewerController : MonoBehaviour
 {
     public int regions;
     public Vector2Int imageSize;
-    public DrawLine drawLine;
+    public List<DrawLine> drawList;
     public Transform circleTransform;
     public GameObject dot;
+    public GameObject line;
 
     private VoronoiDiagram voronoiDiagram;
 
@@ -16,6 +17,7 @@ public class ViewerController : MonoBehaviour
 
     private Triangle triangle;
     private int index;
+    private List<Vector2Int> addedPoints;
     private List<Triangle> superTriangleList;
     private List<GameObject> dotVertexList;
 
@@ -23,11 +25,13 @@ public class ViewerController : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
+        drawList = new List<DrawLine>();
         GeneratePoints();
         //DrawDiagramWithColors();
         index = 0;
         superTriangleList = new List<Triangle>();
         dotVertexList = new List<GameObject>();
+        addedPoints = new List<Vector2Int>();
     }
 
     private void Start()
@@ -47,6 +51,7 @@ public class ViewerController : MonoBehaviour
         {
             superTriangleList.Clear();
             index = 0;
+            addedPoints.Clear();
 
             Vector2 origin = new Vector2(-50.0f, -50.0f);
             Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
@@ -80,7 +85,10 @@ public class ViewerController : MonoBehaviour
         Vector2Int[] vPoints = voronoiDiagram.GetVPoints();
         if (index < vPoints.Length)
         {
-            voronoiDiagram.Triangulate(superTriangleList, vPoints[index]);
+            Vector2Int nextPoint = vPoints[index];
+            addedPoints.Add(nextPoint);
+            voronoiDiagram.Triangulate(superTriangleList, nextPoint);
+            voronoiDiagram.TestTriangulation(superTriangleList, addedPoints.ToArray());
             index++;
         }
 
@@ -88,8 +96,7 @@ public class ViewerController : MonoBehaviour
 
         if (index >= vPoints.Length)
         {
-            Debug.Log("Delaunay Triangulation is Complete!");
-            voronoiDiagram.TestTriangulation(superTriangleList);
+            Debug.Log("Delaunay Triangulation is Complete!");  
         }
     }
 
@@ -102,13 +109,16 @@ public class ViewerController : MonoBehaviour
 
     public void DrawDelaunayTriangulation(List<Triangle> triangles)
     {
-        drawLine.ClearLines();
         DestroyDots();
 
         List<Vector2> vertices = new List<Vector2>();
         foreach (Triangle triangle in triangles)
         {
+            DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
+            drawLine.ClearLines();
             drawLine.AddLines(GetTriangleLines(triangle));
+            drawList.Add(drawLine);
+
             foreach (Vector2 v in triangle.GetVertices())
             {
                 if (!vertices.Contains(v))
@@ -138,7 +148,7 @@ public class ViewerController : MonoBehaviour
 
         if (triangle != null)
         {
-            if (triangle.InCircumCircle(worldPos))
+            if (triangle.IsPointInsideCircumscribedCircle(worldPos))
             {
                 Debug.Log("In Circum Circle");
             }
@@ -147,7 +157,7 @@ public class ViewerController : MonoBehaviour
 
     public void TestGeometry()
     {
-        drawLine.ClearLines();
+        //drawLine.ClearLines();
 
         Vector2 p1 = GetRandomVector2(0, 24);
         Vector2 p2 = GetRandomVector2(0, 24);
@@ -157,7 +167,7 @@ public class ViewerController : MonoBehaviour
 
         Vector2[] triangleLines = GetTriangleLines(triangle);
 
-        drawLine.AddLines(triangleLines);
+        //drawLine.AddLines(triangleLines);
 
         Line perpLine1 = Line.PerpendicularBisector(triangle.v1, triangle.v2);
         Line perpLine2 = Line.PerpendicularBisector(triangle.v2, triangle.v3);
@@ -166,9 +176,9 @@ public class ViewerController : MonoBehaviour
         Vector2 line1Mid = Line.MidPoint(triangle.v1, triangle.v2);
         Vector2 line2Mid = Line.MidPoint(triangle.v2, triangle.v3);
 
-        drawLine.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
+        //drawLine.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
 
-        float radius = triangle.CircumRadius(center);
+        float radius = triangle.circumRadius;
 
         circleTransform.position = center;
         circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
