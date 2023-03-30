@@ -7,9 +7,12 @@ public class ViewerController : MonoBehaviour
     public int regions;
     public Vector2Int imageSize;
     public List<DrawLine> drawList;
-    public Transform circleTransform;
+    public DrawLine triangleViewer;
     public GameObject dot;
     public GameObject line;
+    public GameObject circle;
+
+    public Transform circleTransform;
 
     private VoronoiDiagram voronoiDiagram;
 
@@ -57,6 +60,8 @@ public class ViewerController : MonoBehaviour
             Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
             Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
             superTriangleList.Add(new Triangle(origin, maxYV, maxXV));
+
+            ClearAll();
         }
 
         if (Input.GetKeyDown(KeyCode.I))
@@ -87,8 +92,8 @@ public class ViewerController : MonoBehaviour
         {
             Vector2Int nextPoint = vPoints[index];
             addedPoints.Add(nextPoint);
-            voronoiDiagram.Triangulate(superTriangleList, nextPoint);
-            voronoiDiagram.TestTriangulation(superTriangleList, addedPoints.ToArray());
+            DelaunayTriangulation.Triangulate(superTriangleList, nextPoint);
+            DelaunayTriangulation.TestTriangulation(superTriangleList, addedPoints.ToArray());
             index++;
         }
 
@@ -102,14 +107,14 @@ public class ViewerController : MonoBehaviour
 
     public void GenerateDelaunayTriangulation()
     {
-        List<Triangle> triangles = voronoiDiagram.DelaunayTriangulation();
+        List<Triangle> triangles = voronoiDiagram.GenerateTriangulation();
 
         DrawDelaunayTriangulation(triangles);
     }
 
     public void DrawDelaunayTriangulation(List<Triangle> triangles)
     {
-        DestroyDots();
+        ClearAll();
 
         List<Vector2> vertices = new List<Vector2>();
         foreach (Triangle triangle in triangles)
@@ -142,6 +147,16 @@ public class ViewerController : MonoBehaviour
         dotVertexList.Clear();
     }
 
+    private void DestroyLines()
+    {
+        foreach (var line in drawList)
+        {
+            Destroy(line.gameObject);
+        }
+
+        drawList.Clear();
+    }
+
     private void Select()
     {
         Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -157,7 +172,13 @@ public class ViewerController : MonoBehaviour
 
     public void TestGeometry()
     {
-        //drawLine.ClearLines();
+        ClearAll();
+
+        if (triangleViewer == null)
+        {
+            triangleViewer = Instantiate(line).GetComponent<DrawLine>();
+        }
+        triangleViewer.ClearLines();
 
         Vector2 p1 = GetRandomVector2(0, 24);
         Vector2 p2 = GetRandomVector2(0, 24);
@@ -167,7 +188,7 @@ public class ViewerController : MonoBehaviour
 
         Vector2[] triangleLines = GetTriangleLines(triangle);
 
-        //drawLine.AddLines(triangleLines);
+        triangleViewer.AddLines(triangleLines);
 
         Line perpLine1 = Line.PerpendicularBisector(triangle.v1, triangle.v2);
         Line perpLine2 = Line.PerpendicularBisector(triangle.v2, triangle.v3);
@@ -176,15 +197,36 @@ public class ViewerController : MonoBehaviour
         Vector2 line1Mid = Line.MidPoint(triangle.v1, triangle.v2);
         Vector2 line2Mid = Line.MidPoint(triangle.v2, triangle.v3);
 
-        //drawLine.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
+        triangleViewer.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
 
         float radius = triangle.circumRadius;
+
+        if (circleTransform == null)
+        {
+            circleTransform = Instantiate(circle).GetComponent<Transform>();
+        }
 
         circleTransform.position = center;
         circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
 
         Debug.Log("v1: " + triangle.v1 + " v2: " + triangle.v2 + " v3: " + triangle.v3);
         Debug.Log("Center: (" + center.x + ", " + center.y + ")");
+    }
+
+    public void ClearAll()
+    {
+        DestroyDots();
+        DestroyLines();
+
+        if (triangleViewer != null)
+        {
+            Destroy(triangleViewer.gameObject);
+        }
+
+        if (circleTransform != null)
+        {
+            Destroy(circleTransform.gameObject);
+        }
     }
 
     private Vector2[] GetTriangleLines(Triangle triangle)
