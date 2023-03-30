@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class Triangle
@@ -54,6 +53,20 @@ public class Triangle
         return edges;
     }
 
+    public bool Contains(Vector2 point)
+    {
+        return (point == v1 || point == v2 || point == v3);
+    }
+
+    public bool InCircumCircle(Vector2 point)
+    {
+        Vector2 center = CircumCenter();
+        float radius = CircumRadius(center);
+        float distance = Vector2.Distance(center, point);
+
+        return (distance < radius);
+    }
+
     public Vector2 CircumCenter()
     {
         Line perpLine1 = Line.PerpendicularBisector(v1, v2);
@@ -63,12 +76,6 @@ public class Triangle
 
     public float CircumRadius(Vector2 center)
     {
-        //float radius = Vector2.Distance(center, v1);
-        //float a = edges[0].Length;
-        //float b = edges[1].Length;
-        //float c = edges[2].Length;
-        //float r = (a * b * c) / Mathf.Sqrt((a + b + c) * (b + c - a) * (c + a - b) * (a + b - c));
-
         return Vector2.Distance(center, v1);
     }
 }
@@ -231,19 +238,22 @@ public class VoronoiDiagram
         }
     }
 
-
     public List<Triangle> DelaunayTriangulation()
     {
         List<Triangle> triangles = new List<Triangle>();
-        Vector2 origin = new Vector2(0.0f, 0.0f);
-        Vector2 maxYV = new Vector2(0.0f, 2 * size.y);
-        Vector2 maxXV = new Vector2(2 * size.x, 0.0f);
+        Vector2 origin = new Vector2(-100.0f, -100.0f);
+        Vector2 maxYV = new Vector2(-100.0f, 2 * size.y + 100);
+        Vector2 maxXV = new Vector2(2 * size.x + 100, -100.0f);
         triangles.Add(new Triangle(origin, maxYV, maxXV));
 
         foreach (Vector2Int point in vPoints)
         {
             Triangulate(triangles, point);
-        }    
+        }
+
+        TestTriangulation(triangles);
+
+        RemoveSuperTriangle(triangles, origin, maxYV, maxXV);
 
         return triangles;
     }
@@ -251,73 +261,50 @@ public class VoronoiDiagram
     private void Triangulate(List<Triangle> triangles, Vector2 newPoint)
     {
         List<Triangle> badTriangles = new List<Triangle>();
-        List<Edge> polygonHole = new List<Edge>();
+        List<Edge> polygon = new List<Edge>();
 
-        FindInvalidTriangles(triangles, newPoint, badTriangles, polygonHole);
-        RemoveDuplicatesFromPolygonHole(polygonHole);
+        FindInvalidTriangles(triangles, newPoint, badTriangles, polygon);
+        GetPolygonFromBadTriangles(badTriangles, polygon);
         RemoveInvalidTriangles(triangles, badTriangles);
-        FillInPolygonHole(triangles, newPoint, polygonHole);
+        FillInPolygon(triangles, newPoint, polygon);
     }
 
-    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles, List<Edge> polygonHole)
+    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles, List<Edge> polygon)
     {
         foreach (Triangle triangle in triangles)
         {
-            Vector2 center = triangle.CircumCenter();
-            float radius = triangle.CircumRadius(center);
-
-            float distance = Vector2.Distance(center, newPoint);
-            if (distance < radius)
+            if (triangle.InCircumCircle(newPoint))
             {
-                badTriangles.Add(triangle);
-                foreach (Edge edge in triangle.GetEdges())
-                {
-                    if (!polygonHole.Contains(edge))
-                    {
-                        polygonHole.Add(edge);
-                    }
-                    else
-                    {
-                        polygonHole.Remove(edge);
-                    }
-                }
+                badTriangles.Add(triangle); 
             }
         }
     }
 
-    private void RemoveDuplicatesFromPolygonHole(List<Edge> polygonHole)
+    private void GetPolygonFromBadTriangles(List<Triangle> badTriangles, List<Edge> polygon)
     {
-        //foreach (Edge edge in polygonHole)
-        //{
-        //    if (edge.IsRightToLeft())
-        //    {
-        //        edge.Flip();
-        //    }
-        //}
+        List<Edge> badEdges = new List<Edge>();
+        foreach (var triangle in badTriangles)
+        {
+            foreach (var edge in triangle.GetEdges())
+            {
+                if (!polygon.Contains(edge))
+                {
+                    polygon.Add(edge);
+                }
+                else
+                {
+                    if (!badEdges.Contains(edge))
+                    {
+                        badEdges.Add(edge);
+                    }
+                }
+            }
+        }
 
-        //polygonHole.Sort((e1, e2) => e1.v1.x.CompareTo(e2.v1.x));
-
-        //List<Edge> duplicates = new List<Edge>();
-
-        //Edge previousEdge = polygonHole.FirstOrDefault();
-        //if (previousEdge != null)
-        //{
-        //    for (int i = 1; i < polygonHole.Count; i++)
-        //    {
-        //        Edge currentEdge = polygonHole[i];
-        //        if (previousEdge.Equals(currentEdge))
-        //        {
-        //            duplicates.Add(currentEdge);
-        //        }
-        //        previousEdge = currentEdge;
-        //    }
-        //}
-
-        //foreach (Edge edge in duplicates)
-        //{
-        //    polygonHole.Remove(edge);
-        //    //polygonHole.Remove(edge);
-        //}
+        foreach (var edge in badEdges)
+        {
+            polygon.Remove(edge);
+        }
     }
 
     private void RemoveInvalidTriangles(List<Triangle> triangles, List<Triangle> badTriangles)
@@ -328,14 +315,51 @@ public class VoronoiDiagram
         }
     }
 
-    private void FillInPolygonHole(List<Triangle> triangles, Vector2 newPoint, List<Edge> polygonHole)
+    private void FillInPolygon(List<Triangle> triangles, Vector2 newPoint, List<Edge> polygon)
     {
-        foreach (Edge edge in polygonHole)
+        foreach (Edge edge in polygon)
         {
             triangles.Add(new Triangle(edge.v1, edge.v2, newPoint));
         }
     }
-  
+
+    private void RemoveSuperTriangle(List<Triangle> triangles, Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+        List<Triangle> deleteList = new List<Triangle>();
+        foreach (var triangle in triangles)
+        {
+            if (triangle.Contains(p1) ||
+                triangle.Contains(p2) ||
+                triangle.Contains(p3))
+            {
+                deleteList.Add(triangle);
+            }
+        }
+
+        foreach (var triangle in deleteList)
+        {
+            triangles.Remove(triangle);
+        }
+    }
+
+    private void TestTriangulation(List<Triangle> triangles)
+    {
+        foreach (var triangle in triangles)
+        {
+            foreach (var point in triangle.GetVertices())
+            {
+                foreach (var innerTriangle in triangles)
+                {
+                    if (innerTriangle.InCircumCircle(point))
+                    {
+                        Debug.Log("Triangulation Failed!!!");
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
     public Vector2Int[] GetVPoints()
     {
         return vPoints;
@@ -364,5 +388,4 @@ public class VoronoiDiagram
 
         return index;
     }
-   
 }

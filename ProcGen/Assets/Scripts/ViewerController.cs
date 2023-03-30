@@ -14,6 +14,8 @@ public class ViewerController : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
 
+    private Triangle triangle;
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -49,17 +51,35 @@ public class ViewerController : MonoBehaviour
         {
             TestGeometry();
         }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            Select();
+        }
+    }
+
+    private void Select()
+    {
+        Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        if (triangle != null)
+        {
+            if (triangle.InCircumCircle(worldPos))
+            {
+                Debug.Log("In Circum Circle");
+            }
+        }
     }
 
     public void TestGeometry()
     {
         drawLine.ClearLines();
 
-        Vector2 p1 = GetRandomVector2(-10, 10);
-        Vector2 p2 = GetRandomVector2(-10, 10);
-        Vector2 p3 = GetRandomVector2(-10, 10);
+        Vector2 p1 = GetRandomVector2(0, 24);
+        Vector2 p2 = GetRandomVector2(0, 24);
+        Vector2 p3 = GetRandomVector2(0, 24);
 
-        Triangle triangle = new Triangle(p1, p2, p3);
+        triangle = new Triangle(p1, p2, p3);
 
         Vector2[] triangleLines = GetTriangleLines(triangle);
 
@@ -78,6 +98,8 @@ public class ViewerController : MonoBehaviour
 
         circleTransform.position = center;
         circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
+
+        Debug.Log("Center: (" + center.x + ", " + center.y + ")");
     }
 
     private Vector2[] GetTriangleLines(Triangle triangle)
