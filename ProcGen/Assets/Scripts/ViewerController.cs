@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
@@ -7,6 +8,7 @@ public class ViewerController : MonoBehaviour
     public Vector2Int imageSize;
     public DrawLine drawLine;
     public Transform circleTransform;
+    public GameObject dot;
 
     private VoronoiDiagram voronoiDiagram;
 
@@ -16,13 +18,29 @@ public class ViewerController : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
-        //GenerateDiagram();
+        GeneratePoints();
         //DrawDiagramWithColors();
     }
 
     private void Start()
     {
-        TestGeometry();
+        List<Vector2> vertices = new List<Vector2>();
+        List<Triangle> triangles = voronoiDiagram.DelaunayTriangulation();
+
+        drawLine.ClearLines();
+
+        foreach (Triangle triangle in triangles)
+        {
+            drawLine.AddLines(GetTriangleLines(triangle));
+            foreach (Vector2 v in triangle.GetVertices())
+            {
+                if (!vertices.Contains(v))
+                {
+                    vertices.Add(v);
+                    Instantiate(dot).transform.position = v;
+                }
+            }
+        }
     }
 
     private void Update()
@@ -43,7 +61,9 @@ public class ViewerController : MonoBehaviour
 
         Triangle triangle = new Triangle(p1, p2, p3);
 
-        drawLine.SetUpTriangle(triangle.GetVertices());
+        Vector2[] triangleLines = GetTriangleLines(triangle);
+
+        drawLine.AddLines(triangleLines);
 
         Line perpLine1 = Line.PerpendicularBisector(triangle.v1, triangle.v2);
         Line perpLine2 = Line.PerpendicularBisector(triangle.v2, triangle.v3);
@@ -60,12 +80,26 @@ public class ViewerController : MonoBehaviour
         circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
     }
 
+    private Vector2[] GetTriangleLines(Triangle triangle)
+    {
+        Vector2[] triangleLines = new Vector2[4];
+        Vector2[] triangleVertices = triangle.GetVertices();
+
+        for (int i = 0; i < triangleVertices.Length; i++)
+        {
+            triangleLines[i] = triangleVertices[i];
+        }
+        triangleLines[3] = triangleVertices[0];
+
+        return triangleLines;
+    }
+
     public Vector2 GetRandomVector2(int min, int max)
     {
         return new Vector2(Random.Range(min, max), Random.Range(min, max));
     }
 
-    public void GenerateDiagram()
+    public void GeneratePoints()
     {
         voronoiDiagram.GeneratePoints();
     }

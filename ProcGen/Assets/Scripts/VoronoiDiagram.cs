@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Triangle
@@ -62,11 +63,17 @@ public class Triangle
 
     public float CircumRadius(Vector2 center)
     {
+        //float radius = Vector2.Distance(center, v1);
+        //float a = edges[0].Length;
+        //float b = edges[1].Length;
+        //float c = edges[2].Length;
+        //float r = (a * b * c) / Mathf.Sqrt((a + b + c) * (b + c - a) * (c + a - b) * (a + b - c));
+
         return Vector2.Distance(center, v1);
     }
 }
 
-public class Edge
+public class Edge : System.IEquatable<Edge>
 {
     private Vector2[] vertices;
 
@@ -86,12 +93,46 @@ public class Edge
         }
     }
 
+    public float Length
+    {
+        get
+        {
+            return Vector2.Distance(v1, v2);
+        }
+    }
+
     public Edge(Vector2 v1, Vector2 v2)
     {
         vertices = new Vector2[2];
         vertices[0] = v1;
         vertices[1] = v2;
     }
+
+    public bool IsRightToLeft()
+    {
+        if (v1.x > v2.x)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public void Flip()
+    {
+        Vector2 temp = vertices[0];
+        vertices[0] = vertices[1];
+        vertices[1] = temp;
+    }
+
+    public bool Equals(Edge other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+        return ((v1 == other.v1 && v2 == other.v2) || (v1 == other.v2 && v2 == other.v1));
+    }
+
 }
 
 public class Line
@@ -174,55 +215,6 @@ public class VoronoiDiagram
         this.vColors = new Color[regions];
     }
 
-    public void DelaunayTriangulation()
-    {
-        List<Triangle> triangles = new List<Triangle>();
-        Vector2 origin = new Vector2(0.0f, 0.0f);
-        Vector2 maxYV = new Vector2(0.0f, 2 * size.y);
-        Vector2 maxXV = new Vector2(2 * size.x, 0.0f);
-        triangles.Add(new Triangle(origin, maxYV, maxXV));
-
-        foreach (Vector2Int point in vPoints)
-        {
-            Triangulate(triangles, point);
-        }    
-    }
-
-    private void Triangulate(List<Triangle> triangles, Vector2 newPoint)
-    {
-        List<Triangle> badTriangles = new List<Triangle>();
-        List<Edge> polygonHole = new List<Edge>();
-
-        FindInvalidTriangles(triangles, newPoint, badTriangles, polygonHole);
-        RemoveDuplicatesFromPolygonHole(polygonHole);
-        RemoveInvalidTriangles(triangles, badTriangles);
-        FillInPolygonHole(triangles, newPoint, polygonHole);
-
-    }
-
-    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles, List<Edge> polygonHole)
-    {
-        foreach (Triangle triangle in triangles)
-        {
-
-        }
-    }
-
-    private void RemoveDuplicatesFromPolygonHole(List<Edge> polygonHole)
-    {
-
-    }
-
-    private void RemoveInvalidTriangles(List<Triangle> triangles, List<Triangle> badTriangles)
-    {
-
-    }
-
-    private void FillInPolygonHole(List<Triangle> triangles, Vector2 newPoint, List<Edge> polygonHole)
-    {
-
-    }
-
     public void GeneratePoints()
     {
         for (int i = 0; i < regions; i++)
@@ -239,6 +231,111 @@ public class VoronoiDiagram
         }
     }
 
+
+    public List<Triangle> DelaunayTriangulation()
+    {
+        List<Triangle> triangles = new List<Triangle>();
+        Vector2 origin = new Vector2(0.0f, 0.0f);
+        Vector2 maxYV = new Vector2(0.0f, 2 * size.y);
+        Vector2 maxXV = new Vector2(2 * size.x, 0.0f);
+        triangles.Add(new Triangle(origin, maxYV, maxXV));
+
+        foreach (Vector2Int point in vPoints)
+        {
+            Triangulate(triangles, point);
+        }    
+
+        return triangles;
+    }
+
+    private void Triangulate(List<Triangle> triangles, Vector2 newPoint)
+    {
+        List<Triangle> badTriangles = new List<Triangle>();
+        List<Edge> polygonHole = new List<Edge>();
+
+        FindInvalidTriangles(triangles, newPoint, badTriangles, polygonHole);
+        RemoveDuplicatesFromPolygonHole(polygonHole);
+        RemoveInvalidTriangles(triangles, badTriangles);
+        FillInPolygonHole(triangles, newPoint, polygonHole);
+    }
+
+    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles, List<Edge> polygonHole)
+    {
+        foreach (Triangle triangle in triangles)
+        {
+            Vector2 center = triangle.CircumCenter();
+            float radius = triangle.CircumRadius(center);
+
+            float distance = Vector2.Distance(center, newPoint);
+            if (distance < radius)
+            {
+                badTriangles.Add(triangle);
+                foreach (Edge edge in triangle.GetEdges())
+                {
+                    if (!polygonHole.Contains(edge))
+                    {
+                        polygonHole.Add(edge);
+                    }
+                    else
+                    {
+                        polygonHole.Remove(edge);
+                    }
+                }
+            }
+        }
+    }
+
+    private void RemoveDuplicatesFromPolygonHole(List<Edge> polygonHole)
+    {
+        //foreach (Edge edge in polygonHole)
+        //{
+        //    if (edge.IsRightToLeft())
+        //    {
+        //        edge.Flip();
+        //    }
+        //}
+
+        //polygonHole.Sort((e1, e2) => e1.v1.x.CompareTo(e2.v1.x));
+
+        //List<Edge> duplicates = new List<Edge>();
+
+        //Edge previousEdge = polygonHole.FirstOrDefault();
+        //if (previousEdge != null)
+        //{
+        //    for (int i = 1; i < polygonHole.Count; i++)
+        //    {
+        //        Edge currentEdge = polygonHole[i];
+        //        if (previousEdge.Equals(currentEdge))
+        //        {
+        //            duplicates.Add(currentEdge);
+        //        }
+        //        previousEdge = currentEdge;
+        //    }
+        //}
+
+        //foreach (Edge edge in duplicates)
+        //{
+        //    polygonHole.Remove(edge);
+        //    //polygonHole.Remove(edge);
+        //}
+    }
+
+    private void RemoveInvalidTriangles(List<Triangle> triangles, List<Triangle> badTriangles)
+    {
+        foreach (Triangle triangle in badTriangles)
+        {
+            triangles.Remove(triangle);
+        }
+    }
+
+    private void FillInPolygonHole(List<Triangle> triangles, Vector2 newPoint, List<Edge> polygonHole)
+    {
+        foreach (Edge edge in polygonHole)
+        {
+            triangles.Add(new Triangle(edge.v1, edge.v2, newPoint));
+        }
+    }
+  
     public Vector2Int[] GetVPoints()
     {
         return vPoints;
