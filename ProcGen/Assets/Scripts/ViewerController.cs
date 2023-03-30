@@ -15,6 +15,9 @@ public class ViewerController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
 
     private Triangle triangle;
+    private int index;
+    private List<Triangle> superTriangleList;
+    private List<GameObject> dotVertexList;
 
     private void Awake()
     {
@@ -22,31 +25,45 @@ public class ViewerController : MonoBehaviour
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
         GeneratePoints();
         //DrawDiagramWithColors();
+        index = 0;
+        superTriangleList = new List<Triangle>();
+        dotVertexList = new List<GameObject>();
     }
 
     private void Start()
     {
-        List<Vector2> vertices = new List<Vector2>();
-        List<Triangle> triangles = voronoiDiagram.DelaunayTriangulation();
+        Vector2 origin = new Vector2(-50.0f, -50.0f);
+        Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
+        Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
+        superTriangleList.Add(new Triangle(origin, maxYV, maxXV));
 
-        drawLine.ClearLines();
-
-        foreach (Triangle triangle in triangles)
-        {
-            drawLine.AddLines(GetTriangleLines(triangle));
-            foreach (Vector2 v in triangle.GetVertices())
-            {
-                if (!vertices.Contains(v))
-                {
-                    vertices.Add(v);
-                    Instantiate(dot).transform.position = v;
-                }
-            }
-        }
+        transform.position = new Vector2(12.0f, 12.0f);
+        transform.localScale = new Vector2(24.0f, 24.0f);
     }
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            superTriangleList.Clear();
+            index = 0;
+
+            Vector2 origin = new Vector2(-50.0f, -50.0f);
+            Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
+            Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
+            superTriangleList.Add(new Triangle(origin, maxYV, maxXV));
+        }
+
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            IncrementDelaunayTriangulation();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            GenerateDelaunayTriangulation();
+        }
+
         if (Input.GetKeyDown(KeyCode.T))
         {
             TestGeometry();
@@ -56,6 +73,63 @@ public class ViewerController : MonoBehaviour
         {
             Select();
         }
+    }
+
+    public void IncrementDelaunayTriangulation()
+    {
+        Vector2Int[] vPoints = voronoiDiagram.GetVPoints();
+        if (index < vPoints.Length)
+        {
+            voronoiDiagram.Triangulate(superTriangleList, vPoints[index]);
+            index++;
+        }
+
+        DrawDelaunayTriangulation(superTriangleList);
+
+        if (index >= vPoints.Length)
+        {
+            Debug.Log("Delaunay Triangulation is Complete!");
+            voronoiDiagram.TestTriangulation(superTriangleList);
+        }
+    }
+
+    public void GenerateDelaunayTriangulation()
+    {
+        List<Triangle> triangles = voronoiDiagram.DelaunayTriangulation();
+
+        DrawDelaunayTriangulation(triangles);
+    }
+
+    public void DrawDelaunayTriangulation(List<Triangle> triangles)
+    {
+        drawLine.ClearLines();
+        DestroyDots();
+
+        List<Vector2> vertices = new List<Vector2>();
+        foreach (Triangle triangle in triangles)
+        {
+            drawLine.AddLines(GetTriangleLines(triangle));
+            foreach (Vector2 v in triangle.GetVertices())
+            {
+                if (!vertices.Contains(v))
+                {
+                    vertices.Add(v);
+                    GameObject dotPrefab = Instantiate(dot);
+                    dotPrefab.transform.position = v;
+                    dotVertexList.Add(dotPrefab);
+                }
+            }
+        }
+    }
+
+    private void DestroyDots()
+    {
+        foreach (var dot in dotVertexList)
+        {
+            Destroy(dot);
+        }
+
+        dotVertexList.Clear();
     }
 
     private void Select()
@@ -99,6 +173,7 @@ public class ViewerController : MonoBehaviour
         circleTransform.position = center;
         circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
 
+        Debug.Log("v1: " + triangle.v1 + " v2: " + triangle.v2 + " v3: " + triangle.v3);
         Debug.Log("Center: (" + center.x + ", " + center.y + ")");
     }
 

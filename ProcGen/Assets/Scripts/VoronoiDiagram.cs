@@ -40,7 +40,7 @@ public class Triangle
         edges = new Edge[3];
         edges[0] = new Edge(v1, v2);
         edges[1] = new Edge(v2, v3);
-        edges[2] = new Edge(v1, v3);
+        edges[2] = new Edge(v3, v1);
     }
 
     public Vector2[] GetVertices()
@@ -62,7 +62,7 @@ public class Triangle
     {
         Vector2 center = CircumCenter();
         float radius = CircumRadius(center);
-        float distance = Vector2.Distance(center, point);
+        float distance = Vector2.Distance(point, center);
 
         return (distance < radius);
     }
@@ -234,16 +234,15 @@ public class VoronoiDiagram
 
             vPoints[i] = randomPoint;
             vColors[i] = new Color(red, green, blue);
-
         }
     }
 
     public List<Triangle> DelaunayTriangulation()
     {
         List<Triangle> triangles = new List<Triangle>();
-        Vector2 origin = new Vector2(-100.0f, -100.0f);
-        Vector2 maxYV = new Vector2(-100.0f, 2 * size.y + 100);
-        Vector2 maxXV = new Vector2(2 * size.x + 100, -100.0f);
+        Vector2 origin = new Vector2(-50.0f, -50.0f);
+        Vector2 maxYV = new Vector2(-50.0f, 2 * size.y + 100);
+        Vector2 maxXV = new Vector2(2 * size.x + 100, -50.0f);
         triangles.Add(new Triangle(origin, maxYV, maxXV));
 
         foreach (Vector2Int point in vPoints)
@@ -251,25 +250,25 @@ public class VoronoiDiagram
             Triangulate(triangles, point);
         }
 
-        TestTriangulation(triangles);
-
         RemoveSuperTriangle(triangles, origin, maxYV, maxXV);
+
+        TestTriangulation(triangles);
 
         return triangles;
     }
 
-    private void Triangulate(List<Triangle> triangles, Vector2 newPoint)
+    public void Triangulate(List<Triangle> triangles, Vector2 newPoint)
     {
         List<Triangle> badTriangles = new List<Triangle>();
         List<Edge> polygon = new List<Edge>();
 
-        FindInvalidTriangles(triangles, newPoint, badTriangles, polygon);
+        FindInvalidTriangles(triangles, newPoint, badTriangles);
         GetPolygonFromBadTriangles(badTriangles, polygon);
         RemoveInvalidTriangles(triangles, badTriangles);
         FillInPolygon(triangles, newPoint, polygon);
     }
 
-    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles, List<Edge> polygon)
+    private void FindInvalidTriangles(List<Triangle> triangles, Vector2 newPoint, List<Triangle> badTriangles)
     {
         foreach (Triangle triangle in triangles)
         {
@@ -342,7 +341,7 @@ public class VoronoiDiagram
         }
     }
 
-    private void TestTriangulation(List<Triangle> triangles)
+    public void TestTriangulation(List<Triangle> triangles)
     {
         foreach (var triangle in triangles)
         {
