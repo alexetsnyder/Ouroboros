@@ -79,6 +79,11 @@ public class ViewerController : MonoBehaviour
             TestGeometry();
         }
 
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+            GenerateVoronoiDiagram();
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             Select();
@@ -88,6 +93,33 @@ public class ViewerController : MonoBehaviour
         {
             ClearAll();
             DrawDiagramWithColors();
+        }
+    }
+
+    public void GenerateVoronoiDiagram()
+    {
+        voronoiDiagram.GenerateDiagram();
+
+        DrawVoronoiDiagram(voronoiDiagram.GetVPoints(), voronoiDiagram.GetEdges());
+    }
+
+    public void DrawVoronoiDiagram(Vector2Int[] vPoints, List<Edge> edges)
+    {
+        ClearAll();
+
+        foreach (var point in vPoints)
+        {
+            GameObject dotPrefab = Instantiate(dot);
+            dotPrefab.transform.position = new Vector3(point.x, point.y, 0.0f);
+            dotVertexList.Add(dotPrefab);
+        }
+
+        foreach (var edge in edges)
+        {
+            DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
+            drawLine.ClearLines();
+            drawLine.AddLines(new Vector2[] { edge.v1, edge.v2 });
+            drawList.Add(drawLine);
         }
     }
 
@@ -114,6 +146,12 @@ public class ViewerController : MonoBehaviour
     public void GenerateDelaunayTriangulation()
     {
         List<Triangle> triangles = voronoiDiagram.GenerateTriangulation();
+
+        Vector2 origin = new Vector2(-50.0f, -50.0f);
+        Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
+        Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
+
+        DelaunayTriangulation.RemoveSuperTriangle(triangles, origin, maxYV, maxXV);
 
         DrawDelaunayTriangulation(triangles);
     }
@@ -205,7 +243,7 @@ public class ViewerController : MonoBehaviour
 
         triangleViewer.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
 
-        float radius = triangle.circumRadius;
+        float radius = triangle.CircumRadius;
 
         if (circleTransform == null)
         {

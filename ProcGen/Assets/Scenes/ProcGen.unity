@@ -224,10 +224,10 @@ MonoBehaviour:
   imageSize: {x: 24, y: 24}
   drawList: []
   triangleViewer: {fileID: 0}
-  circleTransform: {fileID: 0}
   dot: {fileID: 5033561209378434253, guid: ca09d436fd11ec04faa3ebca3a5f016a, type: 3}
   line: {fileID: 5073968984249046004, guid: 945f24ae02366b94a8ffecdaaa0dded5, type: 3}
   circle: {fileID: 7930296736686117388, guid: 056ce545dda7ff44cac18b006936d433, type: 3}
+  circleTransform: {fileID: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -281,7 +281,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 12
+  orthographic size: 14
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2

@@ -5,11 +5,12 @@ using UnityEngine;
 
 public class Triangle
 {
+    public Vector2 CircumCenter { get; private set; }
+    public float CircumRadius { get; private set; }
+
     private Vector2[] vertices;
     private Edge[] edges;
-    private Vector2 circumCenter;
-    public float circumRadius;
-
+    
     public Vector2 v1
     {
         get
@@ -34,6 +35,30 @@ public class Triangle
         }
     }
 
+    public Edge e1
+    {
+        get
+        {
+            return edges[0];
+        }
+    }
+
+    public Edge e2
+    {
+        get
+        {
+            return edges[1];
+        }
+    }
+
+    public Edge e3
+    {
+        get
+        {
+            return edges[2];
+        }
+    }
+
     public Triangle(Vector2 v1, Vector2 v2, Vector2 v3)
     {
         vertices = new Vector2[3];
@@ -46,8 +71,8 @@ public class Triangle
         edges[1] = new Edge(v2, v3);
         edges[2] = new Edge(v3, v1);
 
-        circumCenter = CircumscribedCircleCenter();
-        circumRadius = CircumscribedCircleRadius();
+        CircumCenter = GetCircumscribedCircleCenter();
+        CircumRadius = GetCircumscribedCircleRadius();
     }
 
     public Vector2[] GetVertices()
@@ -60,6 +85,11 @@ public class Triangle
         return edges;
     }
 
+    public bool Contains(Edge edge)
+    {
+        return (edge.Equals(e1) || edge.Equals(e2) || edge.Equals(e3));
+    }
+
     public bool Contains(Vector2 point)
     {
         return (point == v1 || point == v2 || point == v3);
@@ -68,21 +98,21 @@ public class Triangle
     public bool IsPointInsideCircumscribedCircle(Vector2 point)
     {
         ;
-        float distance = Vector2.Distance(circumCenter, point);
+        float distance = Vector2.Distance(CircumCenter, point);
 
-        return (distance < circumRadius);
+        return (distance < CircumRadius);
     }
 
-    public Vector2 CircumscribedCircleCenter()
+    public Vector2 GetCircumscribedCircleCenter()
     {
         Line perpLine1 = Line.PerpendicularBisector(v1, v2);
         Line perpLine2 = Line.PerpendicularBisector(v2, v3);
         return perpLine1.Intersect(perpLine2);
     }
 
-    public float CircumscribedCircleRadius()
+    public float GetCircumscribedCircleRadius()
     {
-        return Vector2.Distance(circumCenter, v1);
+        return Vector2.Distance(CircumCenter, v1);
     }
 }
 
@@ -111,6 +141,11 @@ public class Edge : System.IEquatable<Edge>
         vertices = new Vector2[2];
         vertices[0] = v1;
         vertices[1] = v2;
+    }
+
+    public void Clip(float xMin, float yMin, float xMax, float yMax)
+    {
+
     }
 
     public bool Equals(Edge other)
@@ -204,10 +239,6 @@ public class DelaunayTriangulation
             Triangulate(triangles, point);
         }
 
-        RemoveSuperTriangle(triangles, origin, maxYV, maxXV);
-
-        TestTriangulation(triangles, vPoints);
-
         return triangles;
     }
 
@@ -279,7 +310,7 @@ public class DelaunayTriangulation
         }
     }
 
-    private static void RemoveSuperTriangle(List<Triangle> triangles, Vector2 p1, Vector2 p2, Vector2 p3)
+    public static void RemoveSuperTriangle(List<Triangle> triangles, Vector2 p1, Vector2 p2, Vector2 p3)
     {
         List<Triangle> deleteList = new List<Triangle>();
         foreach (var triangle in triangles)
