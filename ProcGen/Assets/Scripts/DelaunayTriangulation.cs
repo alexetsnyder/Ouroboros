@@ -7,6 +7,8 @@ public class Triangle
 {
     public Vector2 CircumCenter { get; private set; }
     public float CircumRadius { get; private set; }
+    public Vector2 Centroid { get; private set; }
+    public float Area { get; private set; }
 
     private Vector2[] vertices;
     private Edge[] edges;
@@ -73,6 +75,8 @@ public class Triangle
 
         CircumCenter = GetCircumscribedCircleCenter();
         CircumRadius = GetCircumscribedCircleRadius();
+        Centroid = GetCentroid();
+        Area = GetArea();
     }
 
     public Vector2[] GetVertices()
@@ -103,16 +107,34 @@ public class Triangle
         return (distance < CircumRadius);
     }
 
-    public Vector2 GetCircumscribedCircleCenter()
+    private Vector2 GetCircumscribedCircleCenter()
     {
         Line perpLine1 = Line.PerpendicularBisector(v1, v2);
         Line perpLine2 = Line.PerpendicularBisector(v2, v3);
         return perpLine1.Intersect(perpLine2);
     }
 
-    public float GetCircumscribedCircleRadius()
+    private float GetCircumscribedCircleRadius()
     {
         return Vector2.Distance(CircumCenter, v1);
+    }
+
+    private Vector2 GetCentroid()
+    {
+        float x = (v1.x + v2.x + v3.x) / 3.0f;
+        float y = (v1.y + v2.y + v3.y) / 3.0f;
+        return new Vector2(x, y);
+    }
+
+    private float GetArea()
+    {
+        //Heron's Formula
+        float a = e1.Length();
+        float b = e2.Length();
+        float c = e3.Length();
+        float s = (a + b + c) / 2;
+
+        return Mathf.Sqrt(s * (s - a) * (s - b) * (s - c));
     }
 }
 
@@ -151,6 +173,11 @@ public class Edge : System.IEquatable<Edge>
         vertices = new Vector2[2];
         vertices[0] = v1;
         vertices[1] = v2;
+    }
+
+    public float Length()
+    {
+        return Vector2.Distance(v1, v2);
     }
 
     public Edge Clip(RectInt clipRect)
@@ -326,7 +353,7 @@ public class Line
 
 public class DelaunayTriangulation
 {
-    public static List<Triangle> GetTriangulation(Vector2Int[] vPoints, int xMax, int yMax)
+    public static List<Triangle> GetTriangulation(Vector2[] vPoints, int xMax, int yMax)
     {
         List<Triangle> triangles = new List<Triangle>();
         Vector2 v1 = new Vector2(-50.0f, -50.0f);
@@ -334,7 +361,7 @@ public class DelaunayTriangulation
         Vector2 v3 = new Vector2(2 * xMax + 100, -50.0f);
         triangles.Add(new Triangle(v1, v2, v3));
 
-        foreach (Vector2Int point in vPoints)
+        foreach (var point in vPoints)
         {
             Triangulate(triangles, point);
         }
@@ -429,7 +456,7 @@ public class DelaunayTriangulation
         }
     }
 
-    public static void TestTriangulation(List<Triangle> triangles, Vector2Int[] points)
+    public static void TestTriangulation(List<Triangle> triangles, Vector2[] points)
     {
         foreach (var point in points)
         {

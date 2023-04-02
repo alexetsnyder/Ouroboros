@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(SpriteRenderer))]
 public class ViewerController : MonoBehaviour
 {
     public int regions;
@@ -13,21 +12,20 @@ public class ViewerController : MonoBehaviour
     private List<DrawLine> drawList;
     private List<GameObject> dotVertexList;
     private List<Transform> circleTransforms;
-    private SpriteRenderer spriteRenderer;
 
     private VoronoiDiagram voronoiDiagram;
     private bool isVoronoiDisplayed;
     private List<DrawLine> voronoiCellDrawList;
+    private GameObject centroidDot;
 
     private Triangle triangle;
 
     private int index;
-    private List<Vector2Int> addedPoints;
+    private List<Vector2> addedPoints;
     private List<Triangle> superTriangleList;
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
         drawList = new List<DrawLine>();
         GeneratePoints();
@@ -37,7 +35,7 @@ public class ViewerController : MonoBehaviour
         index = 0;
         superTriangleList = new List<Triangle>();
         dotVertexList = new List<GameObject>();
-        addedPoints = new List<Vector2Int>();
+        addedPoints = new List<Vector2>();
 
         circleTransforms = new List<Transform>();
     }
@@ -92,15 +90,19 @@ public class ViewerController : MonoBehaviour
             isVoronoiDisplayed = true;
         }
 
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            if (isVoronoiDisplayed)
+            {
+                voronoiDiagram.Relax();
+                DrawVoronoiDiagram(voronoiDiagram.GetVPoints(), voronoiDiagram.GetEdges());
+                isVoronoiDisplayed = true;
+            }
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             Select();
-        }
-
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            ClearAll();
-            DrawDiagramWithColors();
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
@@ -116,15 +118,13 @@ public class ViewerController : MonoBehaviour
         DrawVoronoiDiagram(voronoiDiagram.GetVPoints(), voronoiDiagram.GetEdges());
     }
 
-    public void DrawVoronoiDiagram(Vector2Int[] vPoints, List<Edge> edges)
+    public void DrawVoronoiDiagram(Vector2[] vPoints, List<Edge> edges)
     {
         ClearAll();
 
         foreach (var point in vPoints)
         {
-            GameObject dotPrefab = Instantiate(dot);
-            dotPrefab.transform.position = new Vector3(point.x, point.y, 0.0f);
-            dotVertexList.Add(dotPrefab);
+            DrawDot(point);
         }
 
         foreach (var edge in edges)
@@ -135,10 +135,10 @@ public class ViewerController : MonoBehaviour
 
     public void IncrementDelaunayTriangulation()
     {
-        Vector2Int[] vPoints = voronoiDiagram.GetVPoints();
+        Vector2[] vPoints = voronoiDiagram.GetVPoints();
         if (index < vPoints.Length)
         {
-            Vector2Int nextPoint = vPoints[index];
+            Vector2 nextPoint = vPoints[index];
             addedPoints.Add(nextPoint);
             DelaunayTriangulation.Triangulate(superTriangleList, nextPoint);
             DelaunayTriangulation.TestTriangulation(superTriangleList, addedPoints.ToArray());
@@ -180,9 +180,7 @@ public class ViewerController : MonoBehaviour
                 if (!vertices.Contains(v))
                 {
                     vertices.Add(v);
-                    GameObject dotPrefab = Instantiate(dot);
-                    dotPrefab.transform.position = v;
-                    dotVertexList.Add(dotPrefab);
+                    DrawDot(v);
                 }
             }
         }
@@ -244,7 +242,9 @@ public class ViewerController : MonoBehaviour
             Vector2? seedPoint = voronoiDiagram.FindNearestSeedPoint(worldPos);
             if (seedPoint.HasValue)
             {
-                DrawVoronoiCell(voronoiDiagram.Cells[seedPoint.Value], Color.red);
+                VoronoiCell cell = voronoiDiagram.Cells[seedPoint.Value];
+                DrawVoronoiCell(cell, Color.red);
+                DrawCentroid(voronoiDiagram.GetCentroid(cell));
             }
         }
     }
@@ -270,6 +270,16 @@ public class ViewerController : MonoBehaviour
         voronoiCellDrawList.Add(drawLine);
     }
 
+    public void DrawCentroid(Vector2 centroid)
+    {
+        if (centroidDot == null)
+        {
+            centroidDot = Instantiate(dot);
+            centroidDot.GetComponent<SpriteRenderer>().color = Color.red;
+        }
+        centroidDot.transform.position = centroid;
+    }
+
     public void VisualizeVoronoiEdge()
     {
         ClearAll();
@@ -288,7 +298,7 @@ public class ViewerController : MonoBehaviour
         Triangle t1 = new Triangle(v1, v2, v3);
         Triangle t2 = new Triangle(v3, v4, v1);
 
-        DelaunayTriangulation.TestTriangulation(new List<Triangle>() { t1, t2 }, new Vector2Int[] { v1, v2, v3, v4 });
+        DelaunayTriangulation.TestTriangulation(new List<Triangle>() { t1, t2 }, new Vector2[] { v1, v2, v3, v4 });
 
         Edge voronoiEdge = new Edge(t1.CircumCenter, t2.CircumCenter);
 
@@ -325,6 +335,13 @@ public class ViewerController : MonoBehaviour
         drawList.Add(drawLine);
     }
 
+    private void DrawDot(Vector2 point)
+    {
+        GameObject dotPrefab = Instantiate(dot);
+        dotPrefab.transform.position = point;
+        dotVertexList.Add(dotPrefab);
+    }
+
     public void VisualizeCircumscribedCircleOfTriangle()
     {
         ClearAll();
@@ -359,7 +376,8 @@ public class ViewerController : MonoBehaviour
     {
         isVoronoiDisplayed = false;
         triangle = null;
-        
+
+        Destroy(centroidDot);
         DestroyDots();
         DestroyLines();
         DestroyCircles();
@@ -384,59 +402,4 @@ public class ViewerController : MonoBehaviour
     {
         voronoiDiagram.GeneratePoints();
     }
-
-    public void DrawPoints()
-    {
-        Color[] pixels = CreatePointPixels();
-
-        spriteRenderer.sprite = Sprite.Create(CreateTexture(pixels), new Rect(0.0f, 0.0f, imageSize.x, imageSize.y), Vector2.one * 0.5f);
-    }
-
-    private Color[] CreatePointPixels()
-    {
-        Color[] pixels = new Color[imageSize.x * imageSize.y];
-
-        foreach (Vector2Int point in voronoiDiagram.GetVPoints())
-        {
-            int index = point.x * imageSize.x + point.y;
-            pixels[index] = Color.black;
-        }
-
-        return pixels;
-    }
-
-    public void DrawDiagramWithColors()
-    {
-        Color[] pixels = CreateDiagramPixels();
-
-        spriteRenderer.sprite = Sprite.Create(CreateTexture(pixels), new Rect(0.0f, 0.0f, imageSize.x, imageSize.y), Vector2.one * 0.5f);
-    }
-
-    private Color[] CreateDiagramPixels()
-    {
-        Color[] pixels = new Color[imageSize.x * imageSize.y];
-
-        for (int x = 0; x < imageSize.x; x++)
-        {
-            for (int y = 0; y < imageSize.y; y++)
-            {
-                int index = x * imageSize.x + y;
-                pixels[index] = voronoiDiagram.GetColor(new Vector2Int(x, y));
-            }
-        }
-
-        return pixels;
-    }
-
-    private Texture2D CreateTexture(Color[] pixels)
-    {
-        Texture2D texture = new Texture2D(imageSize.x, imageSize.y);
-
-        texture.filterMode = FilterMode.Point;
-        texture.SetPixels(pixels);
-        texture.Apply();
-
-        return texture;
-    }
-
 }

@@ -18,19 +18,18 @@ public class VoronoiDiagram
     private int regions;
 
     private Vector2Int size;
-    private Vector2Int[] vPoints;
+    private Vector2[] vPoints;
     private Color[] vColors;
 
     private List<Edge> edges;
 
-    public Dictionary<Vector2, VoronoiCell> Cells{ get; private set; }
-    
+    public Dictionary<Vector2, VoronoiCell> Cells{ get; private set; }   
 
     public VoronoiDiagram(int regions, Vector2Int size)
     {
         this.regions = regions;
         this.size = size;
-        this.vPoints = new Vector2Int[regions];
+        this.vPoints = new Vector2[regions];
         this.vColors = new Color[regions];
         this.edges = new List<Edge>();
         this.Cells = new Dictionary<Vector2, VoronoiCell>();
@@ -38,7 +37,7 @@ public class VoronoiDiagram
 
     public void GeneratePoints()
     {
-        for (int i = 0; i < regions; i++)
+        for (int i = 0; i < vPoints.Length; i++)
         {
             float red = Random.Range(0.0f, 1.0f);
             float green = Random.Range(0.0f, 1.0f);
@@ -51,9 +50,47 @@ public class VoronoiDiagram
         }
     }
 
+    public void Relax()
+    {
+        LloydRelaxation();
+    }
+
+    private void LloydRelaxation()
+    {
+        List<Vector2> newPoints = new List<Vector2>();
+        foreach (var cell in Cells.Values)
+        {
+            newPoints.Add(GetCentroid(cell));
+        }
+
+        vPoints = newPoints.ToArray();
+        GenerateDiagram();
+    }
+
+    public Vector2 GetCentroid(VoronoiCell cell)
+    {
+        List<Triangle> cellTriangles = new List<Triangle>();
+        foreach (var edge in cell.Edges)
+        {
+            cellTriangles.Add(new Triangle(edge.v1, edge.v2, cell.SeedPoint));
+        }
+
+        float areaSum = 0.0f;
+        Vector2 centroid = Vector2.zero;
+        foreach (var triangle in cellTriangles)
+        {
+            areaSum += triangle.Area;
+            centroid += triangle.Centroid * triangle.Area;
+        }
+        centroid /= areaSum;
+
+        return centroid;
+    }
+
     public void GenerateDiagram()
     {
         edges.Clear();
+        Cells.Clear();
 
         List<Triangle> triangles = GenerateTriangulation();
         List<Edge> visited = new List<Edge>();
@@ -66,7 +103,7 @@ public class VoronoiDiagram
                 if (!visited.Contains(edge))
                 {
                     visited.Add(edge);
-                    for (int j = i; j < triangles.Count; j++)
+                    for (int j = i + 1; j < triangles.Count; j++)
                     {
                         var otherTriangle = triangles[j];
                         if (otherTriangle.Contains(edge))
@@ -106,7 +143,7 @@ public class VoronoiDiagram
         return DelaunayTriangulation.GetTriangulation(vPoints, size.x, size.y);
     }
 
-    public Vector2Int[] GetVPoints()
+    public Vector2[] GetVPoints()
     {
         return vPoints;
     }
