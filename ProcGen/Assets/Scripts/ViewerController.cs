@@ -6,23 +6,22 @@ public class ViewerController : MonoBehaviour
 {
     public int regions;
     public Vector2Int imageSize;
-    public List<DrawLine> drawList;
-    public DrawLine triangleViewer;
     public GameObject dot;
     public GameObject line;
     public GameObject circle;
 
-    public Transform circleTransform;
+    private List<DrawLine> drawList;
+    private List<GameObject> dotVertexList;
+    private List<Transform> circleTransforms;
+    private SpriteRenderer spriteRenderer;
 
     private VoronoiDiagram voronoiDiagram;
 
-    private SpriteRenderer spriteRenderer;
-
     private Triangle triangle;
+
     private int index;
     private List<Vector2Int> addedPoints;
     private List<Triangle> superTriangleList;
-    private List<GameObject> dotVertexList;
 
     private void Awake()
     {
@@ -35,6 +34,8 @@ public class ViewerController : MonoBehaviour
         superTriangleList = new List<Triangle>();
         dotVertexList = new List<GameObject>();
         addedPoints = new List<Vector2Int>();
+
+        circleTransforms = new List<Transform>();
     }
 
     private void Start()
@@ -52,16 +53,18 @@ public class ViewerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
-            superTriangleList.Clear();
+            ClearAll();
+
             index = 0;
             addedPoints.Clear();
+            superTriangleList.Clear();
 
             Vector2 v1 = new Vector2(-50.0f, -50.0f);
             Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
             Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
             superTriangleList.Add(new Triangle(v1, v2, v3));
 
-            ClearAll();
+            GeneratePoints();
         }
 
         if (Input.GetKeyDown(KeyCode.I))
@@ -76,7 +79,7 @@ public class ViewerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            TestGeometry();
+            VisualizeCircumscribedCircleOfTriangle();
         }
 
         if (Input.GetKeyDown(KeyCode.V))
@@ -93,6 +96,11 @@ public class ViewerController : MonoBehaviour
         {
             ClearAll();
             DrawDiagramWithColors();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            VisualizeVoronoiEdge();
         }
     }
 
@@ -116,10 +124,7 @@ public class ViewerController : MonoBehaviour
 
         foreach (var edge in edges)
         {
-            DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
-            drawLine.ClearLines();
-            drawLine.AddLines(new Vector2[] { edge.v1, edge.v2 });
-            drawList.Add(drawLine);
+            DrawEdge(edge);
         }
     }
 
@@ -163,10 +168,7 @@ public class ViewerController : MonoBehaviour
         List<Vector2> vertices = new List<Vector2>();
         foreach (Triangle triangle in triangles)
         {
-            DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
-            drawLine.ClearLines();
-            drawLine.AddLines(GetTriangleLines(triangle));
-            drawList.Add(drawLine);
+            DrawTriangle(triangle);
 
             foreach (Vector2 v in triangle.GetVertices())
             {
@@ -201,6 +203,16 @@ public class ViewerController : MonoBehaviour
         drawList.Clear();
     }
 
+    private void DestroyCircles()
+    {
+        foreach (var circle in circleTransforms)
+        {
+            Destroy(circle.gameObject);
+        }
+
+        circleTransforms.Clear();
+    }
+
     private void Select()
     {
         Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -214,25 +226,75 @@ public class ViewerController : MonoBehaviour
         }
     }
 
-    public void TestGeometry()
+    public void VisualizeVoronoiEdge()
     {
         ClearAll();
 
-        if (triangleViewer == null)
-        {
-            triangleViewer = Instantiate(line).GetComponent<DrawLine>();
-        }
-        triangleViewer.ClearLines();
+        Vector2Int v1 = new Vector2Int(0, 10);
+        Vector2Int v2 = new Vector2Int(10, 0);
+        Vector2Int v3 = new Vector2Int(0, 0);
+        Vector2Int v4 = new Vector2Int(-10, 0);
 
-        Vector2 p1 = GetRandomVector2(0, 24);
-        Vector2 p2 = GetRandomVector2(0, 24);
-        Vector2 p3 = GetRandomVector2(0, 24);
+        Vector2Int translate = new Vector2Int(12, 6);
+        v1 += translate;
+        v2 += translate;
+        v3 += translate;
+        v4 += translate;
+
+        Triangle t1 = new Triangle(v1, v2, v3);
+        Triangle t2 = new Triangle(v3, v4, v1);
+
+        DelaunayTriangulation.TestTriangulation(new List<Triangle>() { t1, t2 }, new Vector2Int[] { v1, v2, v3, v4 });
+
+        Edge voronoiEdge = new Edge(t1.CircumCenter, t2.CircumCenter);
+
+        DrawTriangle(t1);
+        DrawTriangle(t2);
+
+        DrawCircumCircle(t1);
+        DrawCircumCircle(t2);
+
+        DrawEdge(voronoiEdge);
+    }
+
+    private void DrawTriangle(Triangle triangle)
+    {
+        DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
+        drawLine.ClearLines();
+        drawLine.AddLines(GetTriangleLines(triangle));
+        drawList.Add(drawLine);
+    }
+
+    private void DrawCircumCircle(Triangle triangle)
+    {
+        Transform circleTransform = Instantiate(circle).GetComponent<Transform>();
+        circleTransform.position = triangle.CircumCenter;
+        circleTransform.localScale = new Vector2(2 * triangle.CircumRadius, 2 * triangle.CircumRadius);
+        circleTransforms.Add(circleTransform);
+    }
+
+    private void DrawEdge(Edge edge)
+    {
+        DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
+        drawLine.ClearLines();
+        drawLine.AddLines(new Vector2[] { edge.v1, edge.v2 });
+        drawList.Add(drawLine);
+    }
+
+    public void VisualizeCircumscribedCircleOfTriangle()
+    {
+        ClearAll();
+
+        Vector2 p1 = new Vector2(-6.0f, 6.0f);
+        Vector2 p2 = new Vector2(6.0f, -6.0f);
+        Vector2 p3 = new Vector2(-6.0f, -6.0f);
+
+        Vector2 translate = Vector2.one * 12.0f;
+        p1 += translate;
+        p2 += translate;
+        p3 += translate;
 
         triangle = new Triangle(p1, p2, p3);
-
-        Vector2[] triangleLines = GetTriangleLines(triangle);
-
-        triangleViewer.AddLines(triangleLines);
 
         Line perpLine1 = Line.PerpendicularBisector(triangle.v1, triangle.v2);
         Line perpLine2 = Line.PerpendicularBisector(triangle.v2, triangle.v3);
@@ -241,36 +303,21 @@ public class ViewerController : MonoBehaviour
         Vector2 line1Mid = Line.MidPoint(triangle.v1, triangle.v2);
         Vector2 line2Mid = Line.MidPoint(triangle.v2, triangle.v3);
 
-        triangleViewer.AddLines(new Vector2[] { line1Mid, center, line2Mid, center });
+        DrawTriangle(triangle);
 
-        float radius = triangle.CircumRadius;
+        DrawEdge(new Edge(line1Mid, center));
+        DrawEdge(new Edge(line2Mid, center));
 
-        if (circleTransform == null)
-        {
-            circleTransform = Instantiate(circle).GetComponent<Transform>();
-        }
-
-        circleTransform.position = center;
-        circleTransform.localScale = new Vector2(2 * radius, 2 * radius);
-
-        Debug.Log("v1: " + triangle.v1 + " v2: " + triangle.v2 + " v3: " + triangle.v3);
-        Debug.Log("Center: (" + center.x + ", " + center.y + ")");
+        DrawCircumCircle(triangle);     
     }
 
     public void ClearAll()
     {
+        triangle = null;
+        
         DestroyDots();
         DestroyLines();
-
-        if (triangleViewer != null)
-        {
-            Destroy(triangleViewer.gameObject);
-        }
-
-        if (circleTransform != null)
-        {
-            Destroy(circleTransform.gameObject);
-        }
+        DestroyCircles();
     }
 
     private Vector2[] GetTriangleLines(Triangle triangle)
@@ -285,11 +332,6 @@ public class ViewerController : MonoBehaviour
         triangleLines[3] = triangleVertices[0];
 
         return triangleLines;
-    }
-
-    public Vector2 GetRandomVector2(int min, int max)
-    {
-        return new Vector2(Random.Range(min, max), Random.Range(min, max));
     }
 
     public void GeneratePoints()
