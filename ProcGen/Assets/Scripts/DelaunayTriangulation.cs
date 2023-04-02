@@ -143,7 +143,53 @@ public class Edge : System.IEquatable<Edge>
         vertices[1] = v2;
     }
 
-    public void Clip(float xMin, float yMin, float xMax, float yMax)
+    public bool IsInBounds(RectInt clipRect)
+    {
+        return v1.IsInBounds(clipRect) || v2.IsInBounds(clipRect);
+    }
+
+    public void Clip(RectInt clipRect)
+    {
+        if (!IsInBounds(clipRect))
+        {
+            return;
+        }
+
+        Line line = new Line(v1, v2);
+        if (v1.IsInBounds(clipRect) && !v2.IsInBounds(clipRect))
+        {
+            //Below
+            if (v2.y < clipRect.yMin)
+            {
+                
+            }
+           
+            //Above
+            if (v2.y > clipRect.yMax)
+            {
+
+            }
+
+            //Left
+            if (v2.x < clipRect.xMin)
+            {
+
+            }
+
+            //Right
+            if (v2.x > clipRect.xMax)
+            {
+
+            }
+        }
+
+        if (!v1.IsInBounds(clipRect) && v2.IsInBounds(clipRect))
+        {
+
+        }
+    }
+
+    private void ClipLine(RectInt clipRect, Vector2 inside, Vector2 outside)
     {
 
     }
@@ -188,6 +234,20 @@ public class Line
         c = -(a * p1.x + b * p1.y);
     }
 
+    public static Line Vertical(float x)
+    {
+        Vector2 p1 = new Vector2(x, 0);
+        Vector2 p2 = new Vector2(x, 1);
+        return new Line(p1, p2);
+    }
+
+    public static Line Horizontal(float y)
+    {
+        Vector2 p1 = new Vector2(0, y);
+        Vector2 p2 = new Vector2(1, y);
+        return new Line(p1, p2);
+    }
+
     public void Log()
     {
         Debug.Log("a: " + a + " b: " + b + " c: " + c);
@@ -229,10 +289,10 @@ public class DelaunayTriangulation
     public static List<Triangle> GetTriangulation(Vector2Int[] vPoints, int xMax, int yMax)
     {
         List<Triangle> triangles = new List<Triangle>();
-        Vector2 origin = new Vector2(-50.0f, -50.0f);
-        Vector2 maxYV = new Vector2(-50.0f, 2 * yMax + 100);
-        Vector2 maxXV = new Vector2(2 * xMax + 100, -50.0f);
-        triangles.Add(new Triangle(origin, maxYV, maxXV));
+        Vector2 v1 = new Vector2(-50.0f, -50.0f);
+        Vector2 v2 = new Vector2(-50.0f, 2 * yMax + 100);
+        Vector2 v3 = new Vector2(2 * xMax + 100, -50.0f);
+        triangles.Add(new Triangle(v1, v2, v3));
 
         foreach (Vector2Int point in vPoints)
         {

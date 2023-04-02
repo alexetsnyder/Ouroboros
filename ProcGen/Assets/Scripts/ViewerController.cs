@@ -39,13 +39,27 @@ public class ViewerController : MonoBehaviour
 
     private void Start()
     {
-        Vector2 origin = new Vector2(-50.0f, -50.0f);
-        Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
-        Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
-        superTriangleList.Add(new Triangle(origin, maxYV, maxXV));
+        Vector2 v1 = new Vector2(-50.0f, -50.0f);
+        Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
+        Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
+        superTriangleList.Add(new Triangle(v1, v2, v3));
 
         transform.position = new Vector2(12.0f, 12.0f);
         transform.localScale = new Vector2(24.0f, 24.0f);
+
+        Vector2 origin = new Vector2(0.0f, 0.0f);
+        Vector2 xPoint = new Vector2(1.0f, 0.0f);
+        Vector2 yPoint = new Vector2(0.0f, 1.0f);
+        Line verticalLine = Line.Vertical(0.0f);
+        Line horizontalLine = Line.Horizontal(0.0f);
+        Line intersectLine = new Line(xPoint, yPoint);
+
+        verticalLine.Log();
+        horizontalLine.Log();
+        intersectLine.Log();
+
+        Debug.Log(intersectLine.Intersect(verticalLine));
+        Debug.Log(intersectLine.Intersect(horizontalLine));
     }
 
     private void Update()
@@ -56,10 +70,10 @@ public class ViewerController : MonoBehaviour
             index = 0;
             addedPoints.Clear();
 
-            Vector2 origin = new Vector2(-50.0f, -50.0f);
-            Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
-            Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
-            superTriangleList.Add(new Triangle(origin, maxYV, maxXV));
+            Vector2 v1 = new Vector2(-50.0f, -50.0f);
+            Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
+            Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
+            superTriangleList.Add(new Triangle(v1, v2, v3));
 
             ClearAll();
         }
@@ -147,11 +161,11 @@ public class ViewerController : MonoBehaviour
     {
         List<Triangle> triangles = voronoiDiagram.GenerateTriangulation();
 
-        Vector2 origin = new Vector2(-50.0f, -50.0f);
-        Vector2 maxYV = new Vector2(-50.0f, 2 * 24 + 100);
-        Vector2 maxXV = new Vector2(2 * 24 + 100, -50.0f);
+        Vector2 v1 = new Vector2(-50.0f, -50.0f);
+        Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
+        Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
 
-        DelaunayTriangulation.RemoveSuperTriangle(triangles, origin, maxYV, maxXV);
+        DelaunayTriangulation.RemoveSuperTriangle(triangles, v1, v2, v3);
 
         DrawDelaunayTriangulation(triangles);
     }

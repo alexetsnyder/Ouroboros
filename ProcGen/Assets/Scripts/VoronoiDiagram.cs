@@ -15,7 +15,7 @@ public class VoronoiDiagram
         this.size = size;
         this.vPoints = new Vector2Int[regions];
         this.vColors = new Color[regions];
-        edges = new List<Edge>();
+        this.edges = new List<Edge>();
     }
 
     public void GeneratePoints()
