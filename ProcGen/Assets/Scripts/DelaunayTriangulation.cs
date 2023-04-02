@@ -126,6 +126,11 @@ public class Edge : System.IEquatable<Edge>
         {
             return vertices[0];
         }
+
+        private set
+        {
+            vertices[0] = value;
+        }
     }
 
     public Vector2 v2
@@ -133,6 +138,11 @@ public class Edge : System.IEquatable<Edge>
         get
         {
             return vertices[1];
+        }
+
+        private set
+        {
+            vertices[1] = value;
         }
     }
 
@@ -143,55 +153,85 @@ public class Edge : System.IEquatable<Edge>
         vertices[1] = v2;
     }
 
-    public bool IsInBounds(RectInt clipRect)
+    public Edge Clip(RectInt clipRect)
     {
-        return v1.IsInBounds(clipRect) || v2.IsInBounds(clipRect);
-    }
-
-    public void Clip(RectInt clipRect)
-    {
-        if (!IsInBounds(clipRect))
+        if (!v1.IsInBounds(clipRect) && !v2.IsInBounds(clipRect))
         {
-            return;
+            return null;
         }
 
-        Line line = new Line(v1, v2);
+        Edge returnEdge = new Edge(v1, v2);
+
         if (v1.IsInBounds(clipRect) && !v2.IsInBounds(clipRect))
         {
-            //Below
-            if (v2.y < clipRect.yMin)
+            Vector2? clipPoint = ClipLine(clipRect, v1, v2);
+            if (clipPoint.HasValue)
             {
-                
-            }
-           
-            //Above
-            if (v2.y > clipRect.yMax)
-            {
-
-            }
-
-            //Left
-            if (v2.x < clipRect.xMin)
-            {
-
-            }
-
-            //Right
-            if (v2.x > clipRect.xMax)
-            {
-
+                returnEdge.v2 = clipPoint.Value;
             }
         }
 
         if (!v1.IsInBounds(clipRect) && v2.IsInBounds(clipRect))
         {
-
+            Vector2? clipPoint = ClipLine(clipRect, v2, v1);
+            if (clipPoint.HasValue)
+            {
+                returnEdge.v1 = clipPoint.Value;
+            }
         }
+
+        return returnEdge;
     }
 
-    private void ClipLine(RectInt clipRect, Vector2 inside, Vector2 outside)
+    private Vector2? ClipLine(RectInt clipRect, Vector2 vIn, Vector2 vOut)
     {
+        Line line = new Line(vIn, vOut);
 
+        //Below
+        if (vOut.y < clipRect.yMin)
+        {
+            Line yMinBoundLine = Line.Horizontal(clipRect.yMin);
+            Vector2 intersectPoint = line.Intersect(yMinBoundLine);
+            if (intersectPoint.IsInBounds(clipRect))
+            {
+                return intersectPoint;
+            }
+        }
+
+        //Above
+        if (vOut.y > clipRect.yMax)
+        {
+            Line yMaxBoundLine = Line.Horizontal(clipRect.yMax);
+            Vector2 intersectPoint = line.Intersect(yMaxBoundLine);
+            if (intersectPoint.IsInBounds(clipRect))
+            {
+                return intersectPoint;
+            }
+        }
+
+        //Left
+        if (vOut.x < clipRect.xMin)
+        {
+            Line xMinBoundLine = Line.Vertical(clipRect.xMin);
+            Vector2 intersectPoint = line.Intersect(xMinBoundLine);
+            if (intersectPoint.IsInBounds(clipRect))
+            {
+                return intersectPoint;
+            }
+        }
+
+        //Right
+        if (vOut.x > clipRect.xMax)
+        {
+            Line xMaxBoundLine = Line.Vertical(clipRect.xMax);
+            Vector2 intersectPoint = line.Intersect(xMaxBoundLine);
+            if (intersectPoint.IsInBounds(clipRect))
+            {
+                return intersectPoint;
+            }
+        }
+
+        return null;
     }
 
     public bool Equals(Edge other)

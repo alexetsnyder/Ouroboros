@@ -53,7 +53,13 @@ public class VoronoiDiagram
                         var otherTriangle = triangles[j];
                         if (otherTriangle.Contains(edge))
                         {
-                            edges.Add(new Edge(triangle.CircumCenter, otherTriangle.CircumCenter));
+                            RectInt clipRect = new RectInt(0, 0, size.x, size.y);
+                            Edge voronoiEdge = new Edge(triangle.CircumCenter, otherTriangle.CircumCenter).Clip(clipRect);
+
+                            if (voronoiEdge != null)
+                            {
+                                edges.Add(voronoiEdge);
+                            }
                         }
                     }
                 }

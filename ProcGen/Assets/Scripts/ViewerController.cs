@@ -46,20 +46,6 @@ public class ViewerController : MonoBehaviour
 
         transform.position = new Vector2(12.0f, 12.0f);
         transform.localScale = new Vector2(24.0f, 24.0f);
-
-        Vector2 origin = new Vector2(0.0f, 0.0f);
-        Vector2 xPoint = new Vector2(1.0f, 0.0f);
-        Vector2 yPoint = new Vector2(0.0f, 1.0f);
-        Line verticalLine = Line.Vertical(0.0f);
-        Line horizontalLine = Line.Horizontal(0.0f);
-        Line intersectLine = new Line(xPoint, yPoint);
-
-        verticalLine.Log();
-        horizontalLine.Log();
-        intersectLine.Log();
-
-        Debug.Log(intersectLine.Intersect(verticalLine));
-        Debug.Log(intersectLine.Intersect(horizontalLine));
     }
 
     private void Update()
