@@ -16,6 +16,8 @@ public class ViewerController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
 
     private VoronoiDiagram voronoiDiagram;
+    private bool isVoronoiDisplayed;
+    private List<DrawLine> voronoiCellDrawList;
 
     private Triangle triangle;
 
@@ -29,6 +31,8 @@ public class ViewerController : MonoBehaviour
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
         drawList = new List<DrawLine>();
         GeneratePoints();
+        isVoronoiDisplayed = false;
+        voronoiCellDrawList = new List<DrawLine>();
 
         index = 0;
         superTriangleList = new List<Triangle>();
@@ -85,6 +89,7 @@ public class ViewerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.V))
         {
             GenerateVoronoiDiagram();
+            isVoronoiDisplayed = true;
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -213,6 +218,16 @@ public class ViewerController : MonoBehaviour
         circleTransforms.Clear();
     }
 
+    private void DestroyVoronoiCell()
+    {
+        foreach (var line in voronoiCellDrawList)
+        {
+            Destroy(line.gameObject);
+        }
+
+        voronoiCellDrawList.Clear();
+    }
+
     private void Select()
     {
         Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -224,6 +239,35 @@ public class ViewerController : MonoBehaviour
                 Debug.Log("In Circum Circle");
             }
         }
+        else if (isVoronoiDisplayed)
+        {
+            Vector2? seedPoint = voronoiDiagram.FindNearestSeedPoint(worldPos);
+            if (seedPoint.HasValue)
+            {
+                DrawVoronoiCell(voronoiDiagram.Cells[seedPoint.Value], Color.red);
+            }
+        }
+    }
+
+    public void DrawVoronoiCell(VoronoiCell cell, Color color)
+    {
+        DestroyVoronoiCell();
+     
+        foreach (var edge in cell.Edges)
+        {
+            DrawVoronoiEdge(edge, color);
+        }        
+    }
+
+    public void DrawVoronoiEdge(Edge edge, Color color)
+    {
+        DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
+
+        drawLine.ClearLines();
+        drawLine.AddLines(new Vector2[] { edge.v1, edge.v2 });
+        drawLine.SetColor(color);
+
+        voronoiCellDrawList.Add(drawLine);
     }
 
     public void VisualizeVoronoiEdge()
@@ -313,11 +357,13 @@ public class ViewerController : MonoBehaviour
 
     public void ClearAll()
     {
+        isVoronoiDisplayed = false;
         triangle = null;
         
         DestroyDots();
         DestroyLines();
         DestroyCircles();
+        DestroyVoronoiCell();
     }
 
     private Vector2[] GetTriangleLines(Triangle triangle)

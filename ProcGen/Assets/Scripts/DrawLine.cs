@@ -14,6 +14,12 @@ public class DrawLine : MonoBehaviour
         lineRenderer.positionCount = 0;
     }
 
+    public void SetColor(Color color)
+    {
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
+    }
+
     public void AddLines(Vector2[] positions)
     {
         int startIndex = lineRenderer.positionCount;
