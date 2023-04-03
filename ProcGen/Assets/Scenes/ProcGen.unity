@@ -220,14 +220,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13b89b481f0a1114c8db2b9f618fb6ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  regions: 50
+  regions: 100
   imageSize: {x: 24, y: 24}
-  drawList: []
-  triangleViewer: {fileID: 0}
   dot: {fileID: 5033561209378434253, guid: ca09d436fd11ec04faa3ebca3a5f016a, type: 3}
   line: {fileID: 5073968984249046004, guid: 945f24ae02366b94a8ffecdaaa0dded5, type: 3}
   circle: {fileID: 7930296736686117388, guid: 056ce545dda7ff44cac18b006936d433, type: 3}
-  circleTransform: {fileID: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
