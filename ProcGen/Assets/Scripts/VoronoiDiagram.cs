@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class VoronoiCell
@@ -37,7 +38,8 @@ public class VoronoiDiagram
 
     public void GeneratePoints()
     {
-        for (int i = 0; i < vPoints.Length; i++)
+        int index = 0;
+        while (index < regions)
         {
             float red = Random.Range(0.0f, 1.0f);
             float green = Random.Range(0.0f, 1.0f);
@@ -45,8 +47,12 @@ public class VoronoiDiagram
 
             Vector2Int randomPoint = new Vector2Int(Random.Range(1, size.x - 1), Random.Range(1, size.y - 1));
 
-            vPoints[i] = randomPoint;
-            vColors[i] = new Color(red, green, blue);
+            if (!vPoints.Contains(randomPoint))
+            {
+                vPoints[index] = randomPoint;
+                vColors[index] = new Color(red, green, blue);
+                index++;
+            }
         }
     }
 
@@ -125,7 +131,6 @@ public class VoronoiDiagram
                 }
             }
         }
-
     }
 
     private VoronoiCell CreateGetVoronoiCell(Vector2 seedPoint)
@@ -164,16 +169,19 @@ public class VoronoiDiagram
         Vector2? seedPoint = null;
         float smallestDst = float.MaxValue;
 
-        foreach (var keyPoint in Cells.Keys)
+        if (point.IsInBounds(new RectInt(0, 0, size.x, size.y)))
         {
-            float distance = Vector2.Distance(keyPoint, point);
-            if (distance < smallestDst)
+            foreach (var keyPoint in Cells.Keys)
             {
-                smallestDst = distance;
-                seedPoint = keyPoint;
+                float distance = Vector2.Distance(keyPoint, point);
+                if (distance < smallestDst)
+                {
+                    smallestDst = distance;
+                    seedPoint = keyPoint;
+                }
             }
         }
-
+        
         return seedPoint;
     }
 
