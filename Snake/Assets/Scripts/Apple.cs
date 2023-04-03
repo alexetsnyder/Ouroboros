@@ -16,11 +16,6 @@ public class Apple : MonoBehaviour
         tileMap = GetComponentInChildren<Tilemap>();
     }
 
-    private void Start()
-    {      
-        SetAppleSpawn();
-    }
-
     public bool IsApple(Vector2Int position)
     {
         return (position == appleSpawnPos);
