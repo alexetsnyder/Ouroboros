@@ -27,22 +27,14 @@ public class ViewerController : MonoBehaviour
     private void Awake()
     {
         voronoiDiagram = new VoronoiDiagram(regions, imageSize);
-        drawList = new List<DrawLine>();
-        GeneratePoints();
-        isVoronoiDisplayed = false;
+        drawList = new List<DrawLine>();    
         voronoiCellDrawList = new List<DrawLine>();
-
-        index = 0;
         superTriangleList = new List<Triangle>();
         dotVertexList = new List<GameObject>();
         addedPoints = new List<Vector2>();
-
         circleTransforms = new List<Transform>();
 
-        Vector2 v1 = new Vector2(-50.0f, -50.0f);
-        Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
-        Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
-        superTriangleList.Add(new Triangle(v1, v2, v3));
+        ResetAll();
     }
 
     private void Update()
@@ -114,12 +106,12 @@ public class ViewerController : MonoBehaviour
             index++;
         }
 
-        DrawDelaunayTriangulation(superTriangleList);
-
         if (index >= vPoints.Length)
         {
-            Debug.Log("Delaunay Triangulation is Complete!");  
+            Debug.Log("Delaunay Triangulation is Complete!");
         }
+
+        DrawDelaunayTriangulation(superTriangleList);  
     }
 
     public void GenerateDelaunayTriangulation()

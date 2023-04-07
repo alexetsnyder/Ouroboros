@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 
 public class Triangle
@@ -319,6 +317,12 @@ public class Line
     {
         Debug.Log("a: " + a + " b: " + b + " c: " + c);
         Debug.Log("y = " + slope + "x + " + bConstant);
+    }
+
+    public Vector2 NewPoint(float x)
+    {
+        float y = -(a * x - c) / b;
+        return new Vector2(x, y);
     }
 
     public Vector2 Intersect(Line line)
