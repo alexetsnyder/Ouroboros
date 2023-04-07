@@ -38,76 +38,43 @@ public class ViewerController : MonoBehaviour
         addedPoints = new List<Vector2>();
 
         circleTransforms = new List<Transform>();
+
+        Vector2 v1 = new Vector2(-50.0f, -50.0f);
+        Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
+        Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
+        superTriangleList.Add(new Triangle(v1, v2, v3));
     }
 
-    private void Start()
+    private void Update()
     {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Select();
+        }
+    }
+
+    public void ResetAll()
+    {
+        ClearAll();
+
+        index = 0;
+        addedPoints.Clear();
+        superTriangleList.Clear();
+
         Vector2 v1 = new Vector2(-50.0f, -50.0f);
         Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
         Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
         superTriangleList.Add(new Triangle(v1, v2, v3));
 
-        transform.position = new Vector2(12.0f, 12.0f);
-        transform.localScale = new Vector2(24.0f, 24.0f);
+        GeneratePoints();
     }
 
-    private void Update()
+    public void RelaxVoronoiDiagram()
     {
-        if (Input.GetKeyDown(KeyCode.R))
+        if (isVoronoiDisplayed)
         {
-            ClearAll();
-
-            index = 0;
-            addedPoints.Clear();
-            superTriangleList.Clear();
-
-            Vector2 v1 = new Vector2(-50.0f, -50.0f);
-            Vector2 v2 = new Vector2(-50.0f, 2 * 24 + 100);
-            Vector2 v3 = new Vector2(2 * 24 + 100, -50.0f);
-            superTriangleList.Add(new Triangle(v1, v2, v3));
-
-            GeneratePoints();
-        }
-
-        if (Input.GetKeyDown(KeyCode.I))
-        {
-            IncrementDelaunayTriangulation();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            GenerateDelaunayTriangulation();
-        }
-
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            VisualizeCircumscribedCircleOfTriangle();
-        }
-
-        if (Input.GetKeyDown(KeyCode.V))
-        {
-            GenerateVoronoiDiagram();
-            isVoronoiDisplayed = true;
-        }
-
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            if (isVoronoiDisplayed)
-            {
-                voronoiDiagram.Relax();
-                DrawVoronoiDiagram(voronoiDiagram.GetVPoints(), voronoiDiagram.GetEdges());
-                isVoronoiDisplayed = true;
-            }
-        }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            Select();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            VisualizeVoronoiEdge();
+            voronoiDiagram.Relax();
+            DrawVoronoiDiagram(voronoiDiagram.GetVPoints(), voronoiDiagram.GetEdges());
         }
     }
 
@@ -131,6 +98,8 @@ public class ViewerController : MonoBehaviour
         {
             DrawEdge(edge);
         }
+
+        isVoronoiDisplayed = true;
     }
 
     public void IncrementDelaunayTriangulation()
