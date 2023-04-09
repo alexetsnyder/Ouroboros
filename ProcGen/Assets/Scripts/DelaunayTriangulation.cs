@@ -319,9 +319,25 @@ public class Line
         Debug.Log("y = " + slope + "x + " + bConstant);
     }
 
-    public Vector2 NewPoint(float x)
+    public Vector2? Y(float x)
     {
-        float y = -(a * x - c) / b;
+        if (b == 0)
+        {
+            return null;
+        }
+
+        float y = -(a * x + c) / b;
+        return new Vector2(x, y);
+    }
+
+    public Vector2? X(float y)
+    {
+        if (a == 0)
+        {
+            return null;
+        }
+
+        float x = -(b * y + c) / a;
         return new Vector2(x, y);
     }
 

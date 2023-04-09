@@ -269,7 +269,7 @@ public class ViewerController : MonoBehaviour
         DrawCircumCircle(t1);
         DrawCircumCircle(t2);
 
-        DrawEdge(voronoiEdge);
+        DrawEdge(voronoiEdge, Color.red);
     }
 
     private void DrawTriangle(Triangle triangle)
@@ -288,9 +288,15 @@ public class ViewerController : MonoBehaviour
         circleTransforms.Add(circleTransform);
     }
 
-    private void DrawEdge(Edge edge)
+    private void DrawEdge(Edge edge, Color? color = null)
     {
         DrawLine drawLine = Instantiate(line).GetComponent<DrawLine>();
+
+        if (color.HasValue)
+        {
+            drawLine.SetColor(color.Value);
+        }
+
         drawLine.ClearLines();
         drawLine.AddLines(new Vector2[] { edge.v1, edge.v2 });
         drawList.Add(drawLine);
@@ -322,15 +328,19 @@ public class ViewerController : MonoBehaviour
         Line perpLine2 = Line.PerpendicularBisector(triangle.v2, triangle.v3);
 
         Vector2 center = perpLine1.Intersect(perpLine2);
-        Vector2 line1Mid = Line.MidPoint(triangle.v1, triangle.v2);
         Vector2 line2Mid = Line.MidPoint(triangle.v2, triangle.v3);
+
+        Vector2? line1Pt = perpLine1.Y(center.x - 2);
+        Vector2? line1Pt2 = perpLine1.Y(center.x + 2);
+        Vector2? line2Pt = perpLine2.X(line2Mid.y - 3);
 
         DrawTriangle(triangle);
 
-        DrawEdge(new Edge(line1Mid, center));
-        DrawEdge(new Edge(line2Mid, center));
+        DrawEdge(new Edge(line1Pt.Value, line1Pt2.Value), Color.red);
+        DrawEdge(new Edge(line2Pt.Value, center), Color.blue);
 
-        DrawCircumCircle(triangle);     
+        DrawCircumCircle(triangle);
+        DrawDot(center);
     }
 
     public void ClearAll()
