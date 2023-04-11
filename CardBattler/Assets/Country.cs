@@ -6,4 +6,9 @@ public class Country : MonoBehaviour
     private int Troops { get; set; }
     private int Officers { get; set; }
     private int Artillary { get; set; }
+
+    public void Start()
+    {
+
+    }
 }
